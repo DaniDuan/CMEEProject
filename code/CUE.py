@@ -16,7 +16,6 @@ r =  x[:,N:N+M] # resources
 
 # Functional response
 xr = r/(K + r) # type 2
-#xr = r #type 1
 
 SL = (1 - l_sum) * xr
 #uptake rate and maintenance

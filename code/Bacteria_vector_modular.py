@@ -38,7 +38,7 @@ t_fin = 100 # Number of time steps
 t = sc.linspace(0,t_fin-1,t_fin) # Time steps
 x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 2 # Functional response, Type I or II
-K = 10 # Carrying capacity, kept constant with temperature
+K = 0.1 # Half saturation constant of resource
 
 
 
@@ -77,7 +77,7 @@ def ass_temp_run(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk, Ea_D, typ):
             l = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[2] # Leakage
             p = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[3] # Resource input
             l_sum = np.sum(l, axis=1)
-            pars = (U, R,  l, p, l_sum, Ea_U, Ea_R, Ea_D, N, M, T, Tref, B_R, B_U, Ma, k, ass, typ, K) # Parameters to pass onto model
+            pars = (U, R,  l, p, l_sum, Ea_U, Ea_R, Ea_D, N, M, T, Tref, B_R, B_U, Ma, k, ass, K) # Parameters to pass onto model
 
 
             # Run model
