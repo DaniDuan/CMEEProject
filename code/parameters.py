@@ -1,29 +1,46 @@
 ### Define params
 
 import numpy as np
+from numpy import random
 import size_temp_funcs as st
 import scipy as sc
 
 # Parameters
 def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D):
     # Uptake
-    #U = np.random.sample([N,M])+300
+    # U = np.random.sample([N,M])+300
 
-    u1 = np.zeros([M,M])
-    u_temp = st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D) # uptake rates and maintenance are temp-dependant
-    np.fill_diagonal(u1,u_temp[0:M]) # fill in temp dependant uptake on diagonals
-    u2 = np.zeros([M,M])
-    u3 = np.zeros([M,M])
-    if N == M:
-        U = u1
-    elif M == N/2:
-        np.fill_diagonal(u2,u_temp[M:M*2]) # fill in temp dependant uptake on diagonals
-        U = np.concatenate((u1, u2), axis=0)
-    else:
-        np.fill_diagonal(u2,u_temp[M:M*2]) # fill in temp dependant uptake on diagonals
-        np.fill_diagonal(u3,u_temp[M+1:M*3])
-        U = np.concatenate((u1, u2, u3), axis=0)
-        
+    # u1 = np.zeros([M,M])
+    # u_temp = st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D) # uptake rates and maintenance are temp-dependant
+    # np.fill_diagonal(u1,u_temp[0:M]) # fill in temp dependant uptake on diagonals
+    # u2 = np.zeros([M,M])
+    # u3 = np.zeros([M,M])
+    # if N == M:
+    #     U = u1
+    # elif M == N/2:
+    #     np.fill_diagonal(u2,u_temp[M:M*2]) # fill in temp dependant uptake on diagonals
+    #     U = np.concatenate((u1, u2), axis=0)
+    # else:
+    #     np.fill_diagonal(u2,u_temp[M:M*2]) # fill in temp dependant uptake on diagonals
+    #     np.fill_diagonal(u3,u_temp[M+1:M*3])
+    #     U = np.concatenate((u1, u2, u3), axis=0)
+    
+
+    # Give random uptake for each resources, sum up to the total uptake of the bacteria
+    U_ran = st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D)
+    u_1 = np.empty((0,N)) 
+    for i in range(M-1):
+        mean = U_ran[i]/N
+        a = np.array([np.random.uniform(0, mean, size = N)])
+        u_1 = np.append(u_1,a,axis = 0)
+    u_2 = np.array([U_ran[0:N] - np.sum(u_1, axis = 0)])
+    # b = np.where(u_2<0)
+    # u_1[:,b] = u_1[:,b] + u_2[b]/N-1
+    # u2 = np.where(u2<0, 0, u2)
+    U_raw = np.append(u_1, u_2, axis = 0)
+    for i in range(U_raw.shape[0]): np.random.shuffle(U_raw[:,i])
+    U = np.transpose(U_raw)   
+
     # Respiration
     ar_rm = st.temp_resp(k, T, Tref,T_pk, N, B_R, Ma, Ea_R, Ea_D) # find how varies with temperature (ar = arrhenius)
     # #Rm = sc.full([N], (0.3))

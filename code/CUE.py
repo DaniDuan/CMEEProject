@@ -1,13 +1,14 @@
 # x = x0
 
-# x = result_array[5]
-# xc =  x[0:N] # consumer
-# r =  x[N:N+M] # resources
-# xr = r/(K + r) # type 2
-# SL = (1 - l_sum) * xr
-# C = np.sum(SL * U, axis=1) - R
-# dCdt = xc * C
-# CUE = dCdt / np.sum(xr * U, axis=1)
+x = result_array[50]
+xc =  x[0:N] # consumer
+r =  x[N:N+M] # resources
+# xr = r
+xr = r/(K + r) # type 2
+SL = (1 - l_sum) * xr
+C = np.sum(SL * U, axis=1) - R
+dCdt = xc * C
+CUE = dCdt / np.sum(xr * U, axis=1)
 
 
 x = result_array
@@ -15,6 +16,7 @@ xc =  x[:,0:N] # consumer
 r =  x[:,N:N+M] # resources
 
 # Functional response
+# xr = r
 xr = r/(K + r) # type 2
 
 SL = (1 - l_sum) * xr
