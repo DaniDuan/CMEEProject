@@ -45,6 +45,7 @@ K = 0.5 # Half saturation constant
 ##### Intergrate system forward #####
 
 def ass_temp_run(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk, Ea_D, typ):
+    # pars_out = np.empty((t_n-20, 19)
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
    
 
@@ -78,7 +79,6 @@ def ass_temp_run(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk, Ea_D, typ):
             p = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[3] # Resource input
             l_sum = np.sum(l, axis=1)
             pars = (U, R,  l, p, l_sum, Ea_U, Ea_R, Ea_D, N, M, T, Tref, B_R, B_U, Ma, k, ass, typ, K) # Parameters to pass onto model
-
 
             # Run model
             pops = odeint(mod.metabolic_model, y0=x0, t=t, args = pars) # Integrate
@@ -129,6 +129,7 @@ def ass_temp_run(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk, Ea_D, typ):
             result_array = np.append(result_array, pops, axis=0)
 
         x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1))))
+        # pars_out = np.append(pars_out, np.array(pars))
      
   
     #### Plot output ####
