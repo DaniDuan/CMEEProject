@@ -4,12 +4,12 @@ import numpy as np
 
 # B0 for uptake
 def size_growth(B_U, Ma):
-    B0_U = B_U * Ma**0.75
+    B0_U = B_U * Ma**(-0.25)
     return B0_U
 
 # B0 for maintenance respiration
 def size_resp(B_R, Ma):
-    B0_R = B_R * Ma**0.75
+    B0_R = B_R * Ma**(-0.25)
     return B0_R
 
 # Arrhenius/Sharpe-Schoolfield for maintenance growth

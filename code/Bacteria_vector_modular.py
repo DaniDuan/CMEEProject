@@ -23,19 +23,15 @@ N = 10 # Number of consumers
 M = 5 # Number of resources
 
 # Temperature params
-k = 0.0000862 # Boltzman constant
 Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 pk = 20 # Peak above Tref, degrees C
-T_pk = Tref + pk # Peak above Tref, Kelvin
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
 t_n = 21 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
-ass = 2 # Assembly number, i.e. how many times the system can assemble
-
+ass = 1 # Assembly number, i.e. how many times the system can assemble
 t_fin = 100 # Number of time steps
-t = sc.linspace(0,t_fin-1,t_fin) # Time steps
 x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 2 # Functional response, Type I or II
 K = 0.5 # Half saturation constant
@@ -44,16 +40,23 @@ K = 0.5 # Half saturation constant
 
 ##### Intergrate system forward #####
 
-def ass_temp_run(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk, Ea_D, typ):
+def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
     # pars_out = np.empty((t_n-20, 19)
+
+    # Setted Parameters
+    k = 0.0000862 # Boltzman constant
+    T_pk = Tref + pk # Peak above Tref, Kelvin
+    t = sc.linspace(0,t_fin-1,t_fin) # Time steps
+
+
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
    
 
     for i in range(20, t_n):        # Run model at multiple temperatures, here set to just run at 20 C
         T = 273.15 + i # Temperature
 
-        # Set up Ea (activation energy) and B0 (normalisation constant)
-        # Based on Tom Smith's observations
+        # ???Set up Ea (activation energy) and B0 (normalisation constant)
+        # ???Based on Tom Smith's observations
         Ea_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:N] # Ea for uptake
         Ea_R = Ea_U - 0.8 # Ea for respiration, which should always be lower than Ea_U so 'peaks' later
         B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4 # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
@@ -133,6 +136,13 @@ def ass_temp_run(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk, Ea_D, typ):
      
   
     #### Plot output ####
+
+    U_out = (st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D))
+
+    return result_array, U_out, R
+
+def plot_run(result_array):
+    
     t_plot = sc.linspace(0,len(result_array),len(result_array))
     plt.plot(t_plot, result_array[:,0:N], 'g-', label = 'Consumers', linewidth=0.7)
     plt.plot(t_plot, result_array[:,N:N+M], 'b-', label = 'Resources', linewidth=0.7)
@@ -142,12 +152,10 @@ def ass_temp_run(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk, Ea_D, typ):
     plt.title('Consumer-Resource population dynamics')
     plt.legend([Line2D([0], [0], color='green', lw=2), Line2D([0], [0], color='blue', lw=2)], ['Consumer', 'Resources'])
     plt.show()
-
-    U_out = (st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D))
-
-    return result_array, U_out, R
-
-ass_temp_run(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk , Ea_D,  typ)
+    return 
 
 
+result_array = ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ)[0]
+
+plot_run(result_array)
 

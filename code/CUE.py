@@ -23,34 +23,36 @@ N = 10 # Number of consumers
 M = 5 # Number of resources
 
 # Temperature params
-k = 0.0000862 # Boltzman constant
 Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 pk = 20 # Peak above Tref, degrees C
-T_pk = Tref + pk # Peak above Tref, Kelvin
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
-t_n = 22 # Number of temperatures to run the model at, model starts at 20
+t_n = 21 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
-ass = 2 # Assembly number, i.e. how many times the system can assemble
-
+ass = 1 # Assembly number, i.e. how many times the system can assemble
 t_fin = 100 # Number of time steps
-t = sc.linspace(0,t_fin-1,t_fin) # Time steps
 x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 2 # Functional response, Type I or II
 K = 0.5 # Half saturation constant
 
 
-def CUE_cal(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk, Ea_D, typ):
+def CUE_cal(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
 
-    Ea_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:N] # Ea for uptake
-    Ea_R = Ea_U - 0.8 # Ea for respiration, which should always be lower than Ea_U so 'peaks' later
-    B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4 # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
-    B_R = (10**(1.29 + (-1.25 * Ea_R))) # B0 for respiration
+    # Setted Parameters
+    k = 0.0000862 # Boltzman constant
+    T_pk = Tref + pk # Peak above Tref, Kelvin
+    Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
+    t = sc.linspace(0,t_fin-1,t_fin) # Time steps
 
-    l_sum = np.full((1,M),0.4)
+    Ea_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:N] # ?Ea for uptake
+    Ea_R = Ea_U - 0.8 # ?Ea for respiration, which should always be lower than Ea_U so 'peaks' later
+    B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4 # ?B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
+    B_R = (10**(1.29 + (-1.25 * Ea_R))) # ?B0 for respiration
 
-    x = bvm.ass_temp_run(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk , Ea_D,  typ)[0] # Result array
+    l_sum = np.full((1,M),0.4) # Total leakage for each resource
+
+    x = bvm.ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ)[0] # Result array
     xc =  x[:,0:N] # consumer
     r =  x[:,N:N+M] # resources
 
@@ -75,11 +77,19 @@ def CUE_cal(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk, Ea_D, typ):
         CUE = dCdt / np.einsum('ij,kj->ik', xr[t_fin*(i-20)*ass:t_fin*(i-19)*ass,:], U)
         CUE_out = np.append(CUE_out,CUE, axis = 0)
 
-    t_plot = sc.linspace(0,len(CUE_out),len(CUE_out))
-    plt.plot(t_plot, CUE_out, 'r-', label = 'CUE', linewidth=0.7)
-    plt.show()
     
     return CUE_out
 
 
-CUE_cal(t, N, M, t_n,  Tref, Ma, k, ass, x0, t_fin, T_pk , Ea_D,  typ)
+def plot_CUE(CUE_out):
+    t_plot = sc.linspace(0,len(CUE_out),len(CUE_out))
+    plt.plot(t_plot, CUE_out, 'r-', label = 'CUE', linewidth=0.7)
+    plt.ylabel('CUE')
+    plt.xlabel('Time')
+    plt.title('Carbon Use Efficiency dynamics')
+    plt.show()
+    return
+
+
+CUE_out = CUE_cal(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ)
+plot_CUE(CUE_out)
