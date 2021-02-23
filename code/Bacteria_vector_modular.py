@@ -27,10 +27,10 @@ Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 pk = 20 # Peak above Tref, degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
-t_n = 21 # Number of temperatures to run the model at, model starts at 20
+t_n = 22 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
-ass = 1 # Assembly number, i.e. how many times the system can assemble
+ass = 2 # Assembly number, i.e. how many times the system can assemble
 t_fin = 100 # Number of time steps
 x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 2 # Functional response, Type I or II
@@ -50,7 +50,8 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
 
 
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
-   
+    CUE_out = np.empty((0,N))
+
 
     for i in range(20, t_n):        # Run model at multiple temperatures, here set to just run at 20 C
         T = 273.15 + i # Temperature
@@ -131,6 +132,20 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
 
             result_array = np.append(result_array, pops, axis=0)
 
+
+            # CUE
+            xc =  pops[:,0:N] # consumer
+            r =  pops[:,N:N+M] # resources
+            if typ == 2:
+                xr = r /(K + r) # type 2, monod function
+            else:
+                xr = r #type 1 
+            SL = (1 - l_sum) * xr
+            C = np.einsum('ij,kj->ik', SL, U) - R
+            dCdt = xc * C
+            CUE = dCdt / np.einsum('ij,kj->ik', xr, U)
+            CUE_out = np.append(CUE_out,CUE, axis = 0)
+
         x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1))))
         # pars_out = np.append(pars_out, np.array(pars))
      
@@ -139,10 +154,6 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
 
     U_out = (st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D))
 
-    return result_array, U_out, R
-
-def plot_run(result_array):
-    
     t_plot = sc.linspace(0,len(result_array),len(result_array))
     plt.plot(t_plot, result_array[:,0:N], 'g-', label = 'Consumers', linewidth=0.7)
     plt.plot(t_plot, result_array[:,N:N+M], 'b-', label = 'Resources', linewidth=0.7)
@@ -152,10 +163,37 @@ def plot_run(result_array):
     plt.title('Consumer-Resource population dynamics')
     plt.legend([Line2D([0], [0], color='green', lw=2), Line2D([0], [0], color='blue', lw=2)], ['Consumer', 'Resources'])
     plt.show()
-    return 
+
+    t_plot = sc.linspace(0,len(CUE_out),len(CUE_out))
+    plt.plot(t_plot, CUE_out, 'r-', label = 'CUE', linewidth=0.7)
+    plt.ylabel('CUE')
+    plt.xlabel('Time')
+    plt.title('Carbon Use Efficiency dynamics')
+    plt.show()
 
 
-result_array = ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ)[0]
+    return result_array, U_out, R, CUE_out
 
-plot_run(result_array)
+# def plot_run(result_array):
+    
+#     t_plot = sc.linspace(0,len(result_array),len(result_array))
+#     plt.plot(t_plot, result_array[:,0:N], 'g-', label = 'Consumers', linewidth=0.7)
+#     plt.plot(t_plot, result_array[:,N:N+M], 'b-', label = 'Resources', linewidth=0.7)
+#     plt.grid
+#     plt.ylabel('Population density')
+#     plt.xlabel('Time')
+#     plt.title('Consumer-Resource population dynamics')
+#     plt.legend([Line2D([0], [0], color='green', lw=2), Line2D([0], [0], color='blue', lw=2)], ['Consumer', 'Resources'])
+#     plt.show()
+#     return 
+
+
+# def plot_CUE(CUE_out):
+#     t_plot = sc.linspace(0,len(CUE_out),len(CUE_out))
+#     plt.plot(t_plot, CUE_out, 'r-', label = 'CUE', linewidth=0.7)
+#     plt.ylabel('CUE')
+#     plt.xlabel('Time')
+#     plt.title('Carbon Use Efficiency dynamics')
+#     plt.show()
+#     return
 

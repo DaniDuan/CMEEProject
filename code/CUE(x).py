@@ -27,10 +27,10 @@ Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 pk = 20 # Peak above Tref, degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
-t_n = 21 # Number of temperatures to run the model at, model starts at 20
+t_n = 22 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
-ass = 1 # Assembly number, i.e. how many times the system can assemble
+ass = 2 # Assembly number, i.e. how many times the system can assemble
 t_fin = 100 # Number of time steps
 x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 2 # Functional response, Type I or II
@@ -50,8 +50,6 @@ def CUE_cal(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
     B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4 # ?B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
     B_R = (10**(1.29 + (-1.25 * Ea_R))) # ?B0 for respiration
 
-    l_sum = np.full((1,M),0.4) # Total leakage for each resource
-
     x = bvm.ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ)[0] # Result array
     xc =  x[:,0:N] # consumer
     r =  x[:,N:N+M] # resources
@@ -70,6 +68,8 @@ def CUE_cal(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
         T = 273.15 + i
         U = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[0] # Uptake
         R = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[1] # Respiration
+        l = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[2] # leakage
+        l_sum = np.sum(l, axis=1)
         SL = (1 - l_sum) * xr[t_fin*(i-20)*ass:t_fin*(i-19)*ass,:]
         C = np.einsum('ij,kj->ik', SL, U) - R
         dCdt = xc[t_fin*(i-20)*ass:t_fin*(i-19)*ass,:] * C

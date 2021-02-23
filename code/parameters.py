@@ -74,11 +74,15 @@ def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D):
 
 
     # Excretion
-    l = np.zeros([M,M])
-    for i in range(M-1): 
-        l[i,i+1] =  0.4
-    l[M-1,0] = 0.4
+    # l = np.zeros([M,M])
+    # for i in range(M-1): 
+    #     l[i,i+1] =  0
+    # l[M-1,0] = 0
     
+
+    l = np.array([np.random.uniform(0, 1/(M*M), size = M*M)]).reshape(M,M)
+    b = 1 - np.sum(l)
+    l = l + b/(M*M)
 
     # External resource input
     p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  #np.repeat(1, M) #np.ones(M) #
