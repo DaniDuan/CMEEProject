@@ -27,7 +27,7 @@ Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 pk = 20 # Peak above Tref, degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
-t_n = 22 # Number of temperatures to run the model at, model starts at 20
+t_n = 23 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
 ass = 2 # Assembly number, i.e. how many times the system can assemble
@@ -173,6 +173,9 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
 
 
     return result_array, U_out, R, CUE_out
+
+
+ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ)
 
 # def plot_run(result_array):
     

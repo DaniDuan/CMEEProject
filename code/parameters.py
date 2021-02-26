@@ -1,7 +1,6 @@
 ### Define params
 
 import numpy as np
-from numpy import random
 import size_temp_funcs as st
 import scipy as sc
 
@@ -28,27 +27,14 @@ def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D):
 
     # Give random uptake for each resources, sum up to the total uptake of the bacteria
     U_sum = st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D)
-    u_1 = np.empty((0,N)) 
-    for i in range(M-1):
-        mean = U_sum[i]/N
-        random.seed(i)
-        a = np.array([np.random.uniform(0, mean, size = N)])
-        u_1 = np.append(u_1,a,axis = 0)
-    u_2 = np.array([U_sum[0:N] - np.sum(u_1, axis = 0)])
-    # b = np.where(u_2<0)
-    # u_1[:,b] = u_1[:,b] + u_2[b]/N-1
-    # u2 = np.where(u2<0, 0, u2)
-    U_raw = np.append(u_1, u_2, axis = 0)
-    for i in range(U_raw.shape[1]): 
-        random.seed(i)
-        np.random.shuffle(U_raw[:,i])
-    U = np.transpose(U_raw)
+    np.random.seed(0)
+    diri = np.transpose(np.random.dirichlet(np.ones(M),N))
+    U = np.transpose(diri*U_sum)
 
 
     # Respiration
-    ar_rm = st.temp_resp(k, T, Tref,T_pk, N, B_R, Ma, Ea_R, Ea_D) # find how varies with temperature (ar = arrhenius)
+    R = st.temp_resp(k, T, Tref,T_pk, N, B_R, Ma, Ea_R, Ea_D) # find how varies with temperature (ar = arrhenius)
     # #Rm = sc.full([N], (0.3))
-    R = ar_rm
 
     
     ### Calc  R as function  of U/Rm rule for competitors. Then need to back-calc Ea.
@@ -76,13 +62,16 @@ def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D):
     # Excretion
     # l = np.zeros([M,M])
     # for i in range(M-1): 
-    #     l[i,i+1] =  0
-    # l[M-1,0] = 0
-    
+    #     l[i,i+1] =  0.4
+    # l[M-1,0] = 0.4
 
-    l = np.array([np.random.uniform(0, 1/(M*M), size = M*M)]).reshape(M,M)
-    b = 1 - np.sum(l)
-    l = l + b/(M*M)
+
+    # # NOT SUMMING UP TO CERTAIN VALUE!!!!!!    
+    np.random.seed(0)
+    l_raw = np.array([[np.random.normal(1/(i-1),0.005)* 0.4 if i-1>0 else np.random.normal(0.4, 0.005) for i in range(M,0,-1)] for i in range(1,M+1)])
+    fix = [[1 if j>i else 0 for j in range(M)] for i in range(M)]
+    fix[M-1][0] = 1
+    l = np.transpose(l_raw) * fix
 
     # External resource input
     p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  #np.repeat(1, M) #np.ones(M) #
