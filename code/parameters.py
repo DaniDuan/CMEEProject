@@ -66,12 +66,20 @@ def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D):
     # l[M-1,0] = 0.4
 
 
-    # # NOT SUMMING UP TO CERTAIN VALUE!!!!!!    
+    # SUMMING UP TO 0.4  
     np.random.seed(0)
     l_raw = np.array([[np.random.normal(1/(i-1),0.005)* 0.4 if i-1>0 else np.random.normal(0.4, 0.005) for i in range(M,0,-1)] for i in range(1,M+1)])
     fix = [[1 if j>i else 0 for j in range(M)] for i in range(M)]
     fix[M-1][0] = 1
     l = np.transpose(l_raw) * fix
+
+    # # Dirichlet distribution
+    # np.random.seed(0)
+    # l = np.random.dirichlet(np.ones(M),M)
+    # fix = [[1 if j>i else 0 for j in range(M)] for i in range(M)]
+    # fix[M-1][0] = 1
+    # l = l * fix
+
 
     # External resource input
     p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  #np.repeat(1, M) #np.ones(M) #
