@@ -33,14 +33,14 @@ t_n = 21 # Number of temperatures to run the model at, model starts at 20
 ass = 1 # Assembly number, i.e. how many times the system can assemble
 t_fin = 100 # Number of time steps
 x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1)))) # Starting concentration for resources and consumers
-typ = 1 # Functional response, Type I or II
-K = 0.5 # Half saturation constant
+typ = 2 # Functional response, Type I or II
+K = 1 # Half saturation constant
 
 
 
 ##### Intergrate system forward #####
 
-def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
+def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K):
     # pars_out = np.empty((t_n-20, 19)
 
     # Setted Parameters
@@ -176,11 +176,11 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ):
     plt.title('Carbon Use Efficiency dynamics')
     plt.show()
 
-    # return 
-    return result_array, U_out, R, CUE_out
+    return 
+    # return result_array, U_out, R, CUE_out
 
 
-ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ)
+ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K)
 
 # def plot_run(result_array):
     
