@@ -24,28 +24,32 @@ M = 5 # Number of resources
 
 # Temperature params
 Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
-pk = 20 # Peak above Tref, degrees C
+# pk = 20 # Peak above Tref, degrees C
+pk_U = np.random.normal(25, 3, size = N)
+pk_R = pk_U + 2
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
-t_n = 21 # Number of temperatures to run the model at, model starts at 20
+t_n = 30 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
 ass = 1 # Assembly number, i.e. how many times the system can assemble
 t_fin = 100 # Number of time steps
 x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1)))) # Starting concentration for resources and consumers
-typ = 2 # Functional response, Type I or II
+typ = 1 # Functional response, Type I or II
 K = 1 # Half saturation constant
 
 
 
 ##### Intergrate system forward #####
 
-def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K):
+def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K):
     # pars_out = np.empty((t_n-20, 19)
 
     # Setted Parameters
     k = 0.0000862 # Boltzman constant
-    T_pk = Tref + pk # Peak above Tref, Kelvin
+    # T_pk = Tref + pk # Peak above Tref, Kelvin
+    T_pk_R = Tref + pk_R 
+    T_pk_U = Tref + pk_U
     t = sc.linspace(0,t_fin-1,t_fin) # Time steps
 
 
@@ -56,8 +60,8 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K):
     for i in range(20, t_n):        # Run model at multiple temperatures, here set to just run at 20 C
         T = 273.15 + i # Temperature
 
-        # ???Set up Ea (activation energy) and B0 (normalisation constant)
-        # ???Based on Tom Smith's observations
+        # Set up Ea (activation energy) and B0 (normalisation constant)
+        # Based on Tom Smith's observations
         Ea_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:N] # Ea for uptake
         Ea_R = Ea_U - 0.8 # Ea for respiration, which should always be lower than Ea_U so 'peaks' later
         B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4 # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
@@ -77,10 +81,10 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K):
             #print('Metabolic ratio between competitors' + str(Meta_ratio))
             
             # Set up model
-            U = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[0] # Uptake
-            R = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[1] # Respiration
-            l = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[2] # Leakage
-            p = par.params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[3] # Resource input
+            U = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[0] # Uptake
+            R = par.params(N, M, T, k, Tref, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[1] # Respiration
+            l = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[2] # Leakage
+            p = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[3] # Resource input
             l_sum = np.sum(l, axis=1)
             pars = (U, R,  l, p, l_sum, Ea_U, Ea_R, Ea_D, N, M, T, Tref, B_R, B_U, Ma, k, ass, typ, K) # Parameters to pass onto model
 
@@ -144,6 +148,7 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K):
             C = np.einsum('ij,kj->ik', SL, U) - R
             dCdt = xc * C
             CUE = dCdt / (xc*np.einsum('ij,kj->ik', xr, U))
+            # CUE = C / np.einsum('ij,kj->ik', xr, U)
             CUE_out = np.append(CUE_out,np.round(CUE, 5), axis = 0)
             # CUE_out = np.nan_to_num(CUE, nan=0)
 
@@ -153,7 +158,7 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K):
   
     #### Plot output ####
 
-    U_out = (st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D))
+    U_out = (st.temp_growth(k, T, Tref, T_pk_U, N, B_U, Ma, Ea_U, Ea_D))
 
     t_plot = sc.linspace(0,len(result_array),len(result_array))
     
@@ -171,6 +176,7 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K):
 
     t_plot = sc.linspace(0,len(CUE_out),len(CUE_out))
     plt.plot(t_plot, CUE_out, 'r-', label = 'CUE', linewidth=0.7)
+    # plt.ylim(bottom = -1)
     plt.ylabel('CUE')
     plt.xlabel('Time')
     plt.title('Carbon Use Efficiency dynamics')
@@ -180,7 +186,7 @@ def ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K):
     # return result_array, U_out, R, CUE_out
 
 
-ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk, Ea_D, typ, K)
+ass_temp_run(t_fin, N, M, t_n,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K)
 
 # def plot_run(result_array):
     
