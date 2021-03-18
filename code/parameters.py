@@ -81,6 +81,6 @@ def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D):
     # l = l * fix
 
 
-    # External resource input
-    p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  #np.repeat(1, M) #np.ones(M) #
-    return U, R, l, p
+    # # External resource input
+    # p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  #np.repeat(1, M) #np.ones(M) #
+    return U, R, l
