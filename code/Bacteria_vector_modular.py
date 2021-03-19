@@ -1,4 +1,3 @@
-import scipy as sc
 import numpy as np
 from scipy.integrate import odeint
 import matplotlib.pylab as plt
@@ -35,7 +34,7 @@ t_n = 30 # Number of temperatures to run the model at, model starts at 20
 # Assembly
 ass = 5 # Assembly number, i.e. how many times the system can assemble
 t_fin = 100 # Number of time steps
-x0 = np.concatenate((sc.full([N], (0.1)),sc.full([M], (0.1)))) # Starting concentration for resources and consumers
+x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 1 # Functional response, Type I or II
 K = 1 # Half saturation constant
 
@@ -52,7 +51,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
     # T_pk = Tref + pk # Peak above Tref, Kelvin
     T_pk_R = Tref + pk_R 
     T_pk_U = Tref + pk_U
-    t = sc.linspace(0,t_fin-1,t_fin) # Time steps
+    t = np.linspace(0,t_fin-1,t_fin) # Time steps
 
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
     CUE_out = np.empty((0,N))
@@ -60,6 +59,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
     CUE_com_out = np.empty((0))
     CUE_com_U_out = np.empty((0))
     rich = np.empty((0,ass))
+    rich_d = np.empty((0))
 
     # for i in range(20, t_n):        # Run model at multiple temperatures, here set to just run at 20 C
     # T = 273.15 + i # Temperature
@@ -71,10 +71,10 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
     B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4 # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
     B_R = (10**(1.29 + (-1.25 * Ea_R))) # B0 for respiration
 
+    p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  # Resource input
 
     #print('')
     #print('Temperature =',i)
-    rich = np.empty((0,ass)) # Creating empty array for storing richness
 
     for i in range(cc + 1):
 
@@ -82,7 +82,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
 
             #print('')
             #print('Assembly = ', j)
-            t = sc.linspace(0,t_fin-1,t_fin) # resetting 't' if steady state not reached (see below)
+            t = np.linspace(0,t_fin-1,t_fin) # resetting 't' if steady state not reached (see below)
 
             #print('Uptake Ea (C1 - C5)' + str(Ea_U[0:M]))
             #print('Uptake Ea (C6 - C10)' + str(Ea_U[M:N]))
@@ -92,7 +92,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
             U = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[0] # Uptake
             R = par.params(N, M, T, k, Tref, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[1] # Respiration
             l = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[2] # Leakage
-            p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  # Resource input
             l_sum = np.sum(l, axis=1)
             pars = (U, R, l, p, l_sum, Ea_U, Ea_R, Ea_D, N, M, T, Tref, B_R, B_U, Ma, k, ass, typ, K) # Parameters to pass onto model
 
@@ -105,7 +104,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
             ss_test = np.round(abs((pops[t_fin-1,0:N]) - (pops[t_fin-50,0:N])),3) # Find difference between last timestep and timestep at t_fin - 50 (i.e. 150 if t_fin = 200)
             while True:
                 if  np.any(ss_test > 0):    # If there is a difference then that consumer not yet reached steady state
-                    t = sc.linspace(0,99,100) # reset t so shorter, only 100 timesteps
+                    t = np.linspace(0,99,100) # reset t so shorter, only 100 timesteps
                     pops2 = odeint(mod.metabolic_model, y0=pops[t_fin-1,:], t=t, args=pars) # re-run model using last timestep concentrations of consumers and resources
                     pops = np.append(pops, pops2, axis=0) # append results of additional run to orginial run
                     t_fin = t_fin + 100 # adjust timesteps number
@@ -130,6 +129,10 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
             rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
             x0 = np.concatenate((rem_find, pops[t_fin-1,N:N+M])) # Join new concentrations for consumers with those of resources
             
+            # Richness
+            for i in range(len(pops)):
+                rich_d = np.append(rich_d, N- len(pops[i,0:N][np.where(pops[i,0:N] < 0.01)]))
+
             # Create new consumers
 
             # New Ea_ and Ea_R
@@ -165,6 +168,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
             CUE = dCdt / (xc*np.einsum('ij,kj->ik', xr, U)) # CUE of single species
             CUE_U = 1 - (xc * R/ (xc * np.einsum('ij,kj->ik', xr, U))) # Only considering uptake and respiration
             dCdt_com = np.mean(dCdt/xc, axis = 1)* N # Community level growth rate
+            dCdt_com = np.nan_to_num(dCdt_com, nan=0)
             U_com = np.sum(np.einsum('ij,kj->ik', xr, U), axis = 1) # Community level uptake
             R_com = np.sum(R) # Community level respiration
             CUE_com = dCdt_com/U_com # Community level CUE
@@ -176,55 +180,20 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
             CUE_com_U_out = np.append(CUE_com_U_out, np.round(CUE_com_U, 5), axis = 0)
             # CUE_out = np.nan_to_num(CUE, nan=0)
 
+
         x0 = pops[len(pops)-1,:]
-        x0[N:N+M] = x0[N:N+M] + 0.1
-        # p = p + 2* i + 1
+        # x0[N:N+M] = x0[N:N+M] + 0.1
+        p = p + 1
 
   
     #### Plot output ####
 
-    U_out = (st.temp_growth(k, T, Tref, T_pk_U, N, B_U, Ma, Ea_U, Ea_D))
+    # U_out = (st.temp_growth(k, T, Tref, T_pk_U, N, B_U, Ma, Ea_U, Ea_D))
 
-    t_plot = sc.linspace(0,len(result_array),len(result_array))
-    
-    plt.plot(t_plot, result_array[:,N:N+M], 'b-', linewidth=0.7)
-    plt.ylabel('Resources')
-    plt.xlabel('Time')
-    # plt.title('Consumer-Resource population dynamics')
-    # plt.legend([Line2D([0], [0], color='green', lw=2), Line2D([0], [0], color='blue', lw=2)], ['Consumer', 'Resources'])
-    plt.show()
 
-    plt.plot(t_plot, result_array[:,0:N], 'g-', linewidth=0.7)
-    plt.ylabel('Consumers')
-    plt.xlabel('Time')
-    plt.show()
-
-    t_plot = sc.linspace(0,len(CUE_out),len(CUE_out))
-    plt.plot(t_plot, CUE_out, 'r-', label = 'Species level', linewidth=0.7)
-    plt.plot(t_plot, CUE_com_out, 'k-', label = 'Community level', linewidth = 1)
-    # plt.ylim(bottom = -1)
-    plt.ylabel('CUE')
-    plt.xlabel('Time')
-    plt.title('Carbon Use Efficiency dynamics')
-    plt.legend([Line2D([0], [0], color='red', lw=2), Line2D([0], [0], color='black', lw=2)], ['Species level', 'Community level'])
-    plt.show()
-
-    t_plot = sc.linspace(0,len(CUE_out_U),len(CUE_out_U))
-    plt.plot(t_plot, CUE_out_U, 'r-', label = 'Species level', linewidth=0.7)
-    plt.plot(t_plot, CUE_com_U_out, 'k-', label = 'Community level', linewidth = 1)
-    # plt.ylim(bottom = -1)
-    plt.ylabel('CUE (U & R)')
-    plt.xlabel('Time')
-    plt.title('Carbon Use Efficiency dynamics(U & R)')
-    plt.legend([Line2D([0], [0], color='red', lw=2), Line2D([0], [0], color='black', lw=2)], ['Species level', 'Community level'])
-    plt.show()
-
-    return rich, CUE_out, CUE_out_U
+    return rich, CUE_out, CUE_out_U, result_array, CUE_out, CUE_com_out, CUE_out_U, CUE_com_U_out, rich_d
     # return result_array, U_out, R, CUE_out
 
 
 ass_temp_run(t_fin, N, M, T,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc)
 
-# A = ass_temp_run(t_fin, N, M, T,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K)[1]
-# np. set_printoptions(threshold=np. inf)
-# print(A)

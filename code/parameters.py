@@ -2,7 +2,6 @@
 
 import numpy as np
 import size_temp_funcs as st
-import scipy as sc
 
 # Parameters
 def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D):
