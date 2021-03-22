@@ -1,4 +1,6 @@
 from Bacteria_vector_modular import ass_temp_run
+import matplotlib.pylab as plt
+from matplotlib.lines import Line2D
 import numpy as np
 
 ########## Setting Parameters ###########
@@ -23,7 +25,7 @@ cc = 0 # Times for increasing resource concentration for the next assembly
 T_c = 6 # How many temperatures to cover (how many cycles to run)
 
 ############# Defining a Function for Running Model ##########
-def funcs_with_temp(T_c, t_fin, N, M, T,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc): 
+def funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc): 
     rich_st = np.empty((0))
 
     for i in range(T_c):
@@ -41,4 +43,4 @@ def funcs_with_temp(T_c, t_fin, N, M, T,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, t
     return rich_st
 
     
-funcs_with_temp(T_c, t_fin, N, M, T,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc)
+funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc)

@@ -4,8 +4,8 @@ import matplotlib.pylab as plt
 from matplotlib.lines import Line2D
 
 ########## Setting Parameters ###########
-N = 10 # Number of consumers
-M = 5 # Number of resources
+N = 1 # Number of consumers
+M = 1 # Number of resources
 
 # Temperature params
 T = 273.15 + 25 # Temperature
@@ -16,13 +16,13 @@ Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy
 
 # Assembly
-ass = 8 # Assembly times at each temperature
+ass = 5 # Assembly times at each temperature
 t_fin = 100 # Number of time steps for each temperature
 x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 1 # Functional response, Type I or II
 K = 0.5 # Half saturation constant for Monod equation(Type II)
 
-cc = 0 # Times for increasing resource concentration for the next assembly
+cc = 2 # Times for increasing resource concentration for the next assembly
 
 def plot_con_res_CUE(t_fin, N, M, T,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc):
     
@@ -43,7 +43,7 @@ def plot_con_res_CUE(t_fin, N, M, T,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, 
     plt.show()
 
     plt.plot(t_plot, CUE_out, 'r-', label = 'Species level', linewidth=0.7)
-    plt.plot(t_plot, CUE_com_out, 'k-', label = 'Community level', linewidth = 1)
+    plt.plot(t_plot, CUE_com_out, 'k-', label = 'Community level', linewidth = 0.5)
     # plt.ylim(bottom = -1)
     plt.ylabel('CUE')
     plt.xlabel('Time')
@@ -52,7 +52,7 @@ def plot_con_res_CUE(t_fin, N, M, T,  Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, 
     plt.show()
 
     plt.plot(t_plot, CUE_out_U, 'r-', label = 'Species level', linewidth=0.7)
-    plt.plot(t_plot, CUE_com_U_out, 'k-', label = 'Community level', linewidth = 1)
+    plt.plot(t_plot, CUE_com_U_out, 'k-', label = 'Community level', linewidth = 0.5)
     # plt.ylim(bottom = -1)
     plt.ylabel('CUE (U & R)')
     plt.xlabel('Time')
