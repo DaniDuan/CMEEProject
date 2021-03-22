@@ -59,7 +59,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
     CUE_com_out = np.empty((0))
     CUE_com_U_out = np.empty((0))
     rich = np.empty((0,ass))
-    rich_d_out = np.empty((0))
+    rich_d = np.empty((0))
 
 
     # for i in range(20, t_n):        # Run model at multiple temperatures, here set to just run at 20 C
@@ -171,10 +171,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
 
             # Richness & Community CUE
             for a in range(len(pops)):
-                rich_d = len(pops[a,0:N][np.where(pops[a,0:N] >= 0.01)])
-                rich_d_out = np.append(rich_d_out, rich_d)
-                dCdt_com = np.mean(dCdt[a,:]/xc[a,:])* rich_d
-                dCdt_com = np.nan_to_num(dCdt_com, nan=0)
+                rich_d = np.append(rich_d, len(pops[a,0:N][np.where(pops[a,0:N] >= 0.01)]))
+                dCdt_com = np.sum(np.nan_to_num(dCdt[a,:]/xc[a,:], nan=0))
                 U_com = np.sum(xr[a,:]*U[np.where(pops[a,0:N] >= 0.01)]) # Community level uptake
                 R_com = np.sum(R[np.where(pops[a,0:N] >= 0.01)]) # Community level respiration
                 CUE_com = dCdt_com/U_com # Community level CUE
@@ -193,7 +191,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, x0, pk_R, pk_U, Ea_D, typ, K, cc
     # U_out = (st.temp_growth(k, T, Tref, T_pk_U, N, B_U, Ma, Ea_U, Ea_D))
 
 
-    return rich, CUE_out, CUE_out_U, result_array, CUE_out, CUE_com_out, CUE_out_U, CUE_com_U_out, rich_d_out
+    return rich, CUE_out, CUE_out_U, result_array, CUE_out, CUE_com_out, CUE_out_U, CUE_com_U_out, rich_d
     # return result_array, U_out, R, CUE_out
 
 

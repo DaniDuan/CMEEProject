@@ -4,8 +4,8 @@ import matplotlib.pylab as plt
 from matplotlib.lines import Line2D
 
 ########## Setting Parameters ###########
-N = 1 # Number of consumers
-M = 1 # Number of resources
+N = 10 # Number of consumers
+M = 5 # Number of resources
 
 # Temperature params
 T = 273.15 + 25 # Temperature
