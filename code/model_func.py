@@ -1,8 +1,7 @@
 #### Model equations
-
 import numpy as np
 
-def metabolic_model(x,t, U, R, l, p, l_sum, Ea_U, Ea_R, Ea_D, N, M, T, Tref, B_R, B_U, Ma, k, ass, K, typ):
+def metabolic_model(x,t, U, R, l, p, l_sum, N, M, K, typ):
     
     xc =  x[0:N] # consumer
     r =  x[N:N+M] # resources
@@ -14,7 +13,7 @@ def metabolic_model(x,t, U, R, l, p, l_sum, Ea_U, Ea_R, Ea_D, N, M, T, Tref, B_R
         xr = r #type 1 
 
     ## Consumers
-    # calculate 'middle'/ growth - Rg - leakeage term
+    # calculate leakeage
     SL = (1 - l_sum) * xr
     #uptake rate and maintenance
     C = np.sum(SL * U, axis=1) - R
