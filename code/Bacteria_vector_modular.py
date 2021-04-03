@@ -28,8 +28,8 @@ Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfi
 t_n = 30 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
-ass = 5 # Assembly number, i.e. how many times the system can assemble
-tv = 5 # Turnovers inside one assembly
+ass = 6 # Assembly number, i.e. how many times the system can assemble
+tv = 20 # immigration times inside one assembly
 t_fin = 100 # Number of time steps
 x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 1 # Functional response, Type I or II
@@ -50,11 +50,12 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     # CUE_out_U = np.empty((0,N))
     # CUE_com_out = np.empty((0))
     # CUE_com_U_out = np.empty((0))
-    rich = np.empty((0, tv))
-    rich_d = np.empty((0))
+    # rich_d = np.empty((0))
+    rich_seires = np.empty((0,tv))
+    CUE_series = np.empty((0,N))
+    CUE_c_series = np.empty((0,tv))
     t_point = 0
-    t_rich = np.empty((0))
-    CUE_t = np.empty((0,N))
+    
 
 
     for i in range(ass):
@@ -78,6 +79,11 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
         R = par.params(N, M, T, k, Tref, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[1] # Respiration
         l = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[2] # Leakage
         l_sum = np.sum(l, axis=1)
+
+
+        rich = np.empty((0, tv))
+        CUE_t = np.empty((0,N))
+        CUE_c = np.empty((0,tv))
         
         for j in range(tv):
 
@@ -102,7 +108,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             #         pops=pops # If at steady state then nothing happens
             
             # t_fin = 100
-            t_point = t_point + t_fin
+            # t_point = t_point + t_fin
             pops = np.round(pops, 7)
 
             ##CUE
@@ -115,9 +121,12 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             SL = (1 - l_sum) * xr
             C = np.einsum('ij,kj->ik', SL, U) - R
             dCdt = xc * C
-            C = np.einsum('ij,kj->ik', SL, U) - R
-            CUE = np.sum(dCdt,axis = 0)/np.sum(xc*np.einsum('ij,kj->ik', xr, U),axis = 0)
+            G_i = [i for i in range(len(xc)-1) if np.any((xc[i+1,]-xc[i,]) > 0)]
+            # CUE = np.sum(dCdt[G_i]/xc[G_i], axis = 0)/np.sum(np.einsum('ij,kj->ik', xr[G_i], U), axis = 0)
+            CUE = (dCdt[max(G_i)] - dCdt[min(G_i)])/np.sum(np.einsum('ij,kj->ik', xr[G_i], U), axis = 0)
             CUE_t = np.append(CUE_t, [CUE], axis = 0)
+            CUE_c = np.append(CUE_c, np.sum(dCdt[max(G_i)] - dCdt[min(G_i)])/np.sum(np.einsum('ij,kj->ik', xr[G_i], U))) # community level CUE
+
 
             ###Assembly###
 
@@ -128,7 +137,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
 
             # Richness
             rich = np.append(rich, N - len(rem_find[ext])) # Richness
-            t_rich = np.append(t_rich, t_point)
+            # t_rich = np.append(t_rich, t_point)
 
             
             x0 = np.concatenate((rem_find, pops[t_fin-1,N:N+M])) # Join new concentrations for consumers with those of resources
@@ -192,8 +201,10 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
         # x0 = pops[len(pops)-1,:]
         # x0[N:N+M] = x0[N:N+M] + 0.1
         # p = p + 1
+        rich_seires = np.append(rich_seires, [rich], axis = 0)
+        CUE_series = np.append(CUE_series, CUE_t, axis = 0)
+        CUE_c_series = np.append(CUE_c_series, [CUE_c], axis = 0)
 
-    return rich, t_rich, result_array, CUE_t
+    return result_array, rich_seires, CUE_series, CUE_c_series
 
-
-A = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)[3]
+A = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
