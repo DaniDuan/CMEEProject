@@ -16,7 +16,7 @@ import random
 
 ######## Set up parameters ###########
 
-N = 10 # Number of consumers
+N = 5 # Number of consumers
 M = 5 # Number of resources
 
 # Temperature params
@@ -46,14 +46,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     # T_pk = Tref + pk # Peak above Tref, Kelvin
 
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
-    # CUE_out = np.empty((0,N))
-    # CUE_out_U = np.empty((0,N))
-    # CUE_com_out = np.empty((0))
-    # CUE_com_U_out = np.empty((0))
-    # rich_d = np.empty((0))
+    CUE_out = np.empty((0,N))
     rich_seires = np.empty((0,tv))
-    CUE_series = np.empty((0,N))
-    CUE_c_series = np.empty((0,tv))
     t_point = 0
     
 
@@ -82,9 +76,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
 
 
         rich = np.empty((0, tv))
-        CUE_t = np.empty((0,N))
-        CUE_c = np.empty((0,tv))
-        
+
+
         for j in range(tv):
 
             t = np.linspace(0,t_fin-1,t_fin) # resetting 't' if steady state not reached (see below)
@@ -111,21 +104,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             # t_point = t_point + t_fin
             pops = np.round(pops, 7)
 
-            ##CUE
-            xc =  pops[:,0:N] # consumer
-            r =  pops[:,N:N+M] # resources
-            if typ == 2:
-                xr = r /(K + r) # type 2, monod function
-            else:
-                xr = r #type 1 
-            SL = (1 - l_sum) * xr
-            C = np.einsum('ij,kj->ik', SL, U) - R
-            dCdt = xc * C
-            G_i = [i for i in range(len(xc)-1) if np.any((xc[i+1,]-xc[i,]) > 0)]
-            # CUE = np.sum(dCdt[G_i]/xc[G_i], axis = 0)/np.sum(np.einsum('ij,kj->ik', xr[G_i], U), axis = 0)
-            CUE = (dCdt[max(G_i)] - dCdt[min(G_i)])/np.sum(np.einsum('ij,kj->ik', xr[G_i], U), axis = 0)
-            CUE_t = np.append(CUE_t, [CUE], axis = 0)
-            CUE_c = np.append(CUE_c, np.sum(dCdt[max(G_i)] - dCdt[min(G_i)])/np.sum(np.einsum('ij,kj->ik', xr[G_i], U))) # community level CUE
+
+            # G_i = [i for i in range(len(xc)-1) if np.any((xc[i+1,]-xc[i,]) > 0)] # before reaching steady state
 
 
             ###Assembly###
@@ -170,41 +150,34 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             result_array = np.append(result_array, pops, axis=0)
 
 
-            # # CUE
-            # xc =  pops[:,0:N] # consumer
-            # r =  pops[:,N:N+M] # resources
-            # if typ == 2:
-            #     xr = r /(K + r) # type 2, monod function
-            # else
-            #     xr = r #type 1 
-            # SL = (1 - l_sum) * xr
-            # C = np.einsum('ij,kj->ik', SL, U) - R
-            # dCdt = xc * C
-            # CUE = dCdt / (xc*np.einsum('ij,kj->ik', xr, U)) # CUE of single species
-            # CUE_U = 1 - (xc * R/ (xc * np.einsum('ij,kj->ik', xr, U))) # Only considering uptake and respiration
-            # # CUE = C / np.einsum('ij,kj->ik', xr, U)
-            # CUE_out = np.append(CUE_out,np.round(CUE, 5), axis = 0)
-            # CUE_out_U = np.append(CUE_out_U, np.around(CUE_U, 5), axis = 0)
-            # # CUE_out = np.nan_to_num(CUE, nan=0)
+            # CUE
+            xc =  pops[:,0:N] # consumer
+            r =  pops[:,N:N+M] # resources
+            if typ == 2:
+                xr = r /(K + r) # type 2, monod function
+            else:
+                xr = r #type 1 
+            SL = (1 - l_sum) * xr
+            C = np.einsum('ij,kj->ik', SL, U) - R
+            dCdt = xc * C
+            CUE = dCdt / (xc*np.einsum('ij,kj->ik', xr, U)) # CUE of single species
+            # CUE = C / np.einsum('ij,kj->ik', xr, U)
+            CUE_out = np.append(CUE_out,np.round(CUE, 5), axis = 0)
+            # CUE_out = np.nan_to_num(CUE, nan=0)
 
-            # Richness & Community CUE
+            # # Richness & Community CUE
             # for a in range(len(pops)):
-            #     rich_d = np.append(rich_d, len(pops[a,0:N][np.where(pops[a,0:N] >= 0.01)]))
-                # dCdt_com = np.sum(np.nan_to_num(dCdt[a,:]/xc[a,:], nan=0))
-                # U_com = np.sum(xr[a,:]*U[np.where(pops[a,0:N] >= 0.01)]) # Community level uptake
-                # R_com = np.sum(R[np.where(pops[a,0:N] >= 0.01)]) # Community level respiration
-                # CUE_com = dCdt_com/U_com # Community level CUE
-                # CUE_com_U = 1 - (R_com/U_com) # Community level CUE(Only considering uptake and respiration)
-                # CUE_com_out = np.append(CUE_com_out, np.round(CUE_com, 5))
-                # CUE_com_U_out = np.append(CUE_com_U_out, np.round(CUE_com_U, 5))
+            #     dCdt_com = np.sum(np.nan_to_num(dCdt[a,:]/xc[a,:], nan=0))
+            #     U_com = np.sum(xr[a,:]*U[np.where(pops[a,0:N] >= 0.01)]) # Community level uptake
+            #     R_com = np.sum(R[np.where(pops[a,0:N] >= 0.01)]) # Community level respiration
+            #     CUE_com = dCdt_com/U_com # Community level CUE
+            #     CUE_com_out = np.append(CUE_com_out, np.round(CUE_com, 5))
 
         # x0 = pops[len(pops)-1,:]
         # x0[N:N+M] = x0[N:N+M] + 0.1
         # p = p + 1
         rich_seires = np.append(rich_seires, [rich], axis = 0)
-        CUE_series = np.append(CUE_series, CUE_t, axis = 0)
-        CUE_c_series = np.append(CUE_c_series, [CUE_c], axis = 0)
 
-    return result_array, rich_seires, CUE_series, CUE_c_series
+    return result_array, rich_seires, CUE_out # CUE_com_out
 
 A = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
