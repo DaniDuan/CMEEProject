@@ -4,7 +4,7 @@ import matplotlib.pylab as plt
 from matplotlib.lines import Line2D
 
 ########## Setting Parameters ###########
-N = 10 # Number of consumers
+N = 5 # Number of consumers
 M = 5 # Number of resources
 
 # Temperature params
@@ -14,8 +14,8 @@ Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy
 
 # Assembly
-ass = 6 # Assembly times at each temperature
-tv = 20 # immigration times inside one assembly
+ass = 1 # Assembly times at each temperature
+tv = 2 # immigration times inside one assembly
 t_fin = 100 # Number of time steps for each temperature
 x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 1 # Functional response, Type I or II
@@ -24,7 +24,7 @@ K = 0.5 # Half saturation constant for Monod equation(Type II)
 
 def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     
-    result_array, rich_seires, CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
+    result_array, rich_seires = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
 
     t_plot = np.linspace(0,len(result_array),len(result_array))
     
@@ -40,14 +40,14 @@ def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     plt.xlabel('Time')
     plt.show()
 
-    plt.plot(t_plot, CUE_out, 'r-', label = 'Species level', linewidth=0.7)
-    # plt.plot(t_plot, CUE_com_out, 'k-', label = 'Community level', linewidth = 0.5)
-    # plt.ylim(bottom = -1)
-    plt.ylabel('CUE')
-    plt.xlabel('Time')
-    plt.title('Carbon Use Efficiency dynamics')
-    # plt.legend([Line2D([0], [0], color='red', lw=2), Line2D([0], [0], color='black', lw=2)], ['Species level', 'Community level'])
-    plt.show()
+    # plt.plot(t_plot, CUE_out, 'r-', label = 'Species level', linewidth=0.7)
+    # # plt.plot(t_plot, CUE_com_out, 'k-', label = 'Community level', linewidth = 0.5)
+    # # plt.ylim(bottom = -1)
+    # plt.ylabel('CUE')
+    # plt.xlabel('Time')
+    # plt.title('Carbon Use Efficiency dynamics')
+    # # plt.legend([Line2D([0], [0], color='red', lw=2), Line2D([0], [0], color='black', lw=2)], ['Species level', 'Community level'])
+    # plt.show()
 
     # plt.plot(t_plot, CUE_out_U, 'r-', label = 'Species level', linewidth=0.7)
     # plt.plot(t_plot, CUE_com_U_out, 'k-', label = 'Community level', linewidth = 0.5)
@@ -83,6 +83,6 @@ def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     # plt.xlabel('Time')
     # plt.show()
 
-    return CUE_out
+    return # CUE_out
 
 plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)

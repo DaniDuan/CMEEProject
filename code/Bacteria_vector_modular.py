@@ -150,20 +150,20 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             result_array = np.append(result_array, pops, axis=0)
 
 
-            # CUE
-            xc =  pops[:,0:N] # consumer
-            r =  pops[:,N:N+M] # resources
-            if typ == 2:
-                xr = r /(K + r) # type 2, monod function
-            else:
-                xr = r #type 1 
-            SL = (1 - l_sum) * xr
-            C = np.einsum('ij,kj->ik', SL, U) - R
-            dCdt = xc * C
-            CUE = dCdt / (xc*np.einsum('ij,kj->ik', xr, U)) # CUE of single species
-            # CUE = C / np.einsum('ij,kj->ik', xr, U)
-            CUE_out = np.append(CUE_out,np.round(CUE, 5), axis = 0)
-            # CUE_out = np.nan_to_num(CUE, nan=0)
+            # # CUE
+            # xc =  pops[:,0:N] # consumer
+            # r =  pops[:,N:N+M] # resources
+            # if typ == 2:
+            #     xr = r /(K + r) # type 2, monod function
+            # else:
+            #     xr = r #type 1 
+            # SL = (1 - l_sum) * xr
+            # C = np.einsum('ij,kj->ik', SL, U) - R
+            # dCdt = xc * C
+            # CUE = dCdt / (xc*np.einsum('ij,kj->ik', xr, U)) # CUE of single species
+            # # CUE = C / np.einsum('ij,kj->ik', xr, U)
+            # CUE_out = np.append(CUE_out,np.round(CUE, 5), axis = 0)
+            # # CUE_out = np.nan_to_num(CUE, nan=0)
 
             # # Richness & Community CUE
             # for a in range(len(pops)):
@@ -178,6 +178,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
         # p = p + 1
         rich_seires = np.append(rich_seires, [rich], axis = 0)
 
-    return result_array, rich_seires, CUE_out # CUE_com_out
+    return result_array, rich_seires, # CUE_out # CUE_com_out
 
 A = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
