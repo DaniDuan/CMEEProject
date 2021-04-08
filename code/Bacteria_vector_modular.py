@@ -16,8 +16,8 @@ import random
 
 ######## Set up parameters ###########
 
-N = 5 # Number of consumers
-M = 5 # Number of resources
+N = 50 # Number of consumers
+M = 50 # Number of resources
 
 # Temperature params
 T = 273.15 + 25 # Temperature
@@ -28,8 +28,8 @@ Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfi
 t_n = 30 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
-ass = 6 # Assembly number, i.e. how many times the system can assemble
-tv = 20 # immigration times inside one assembly
+ass = 1 # Assembly number, i.e. how many times the system can assemble
+tv = 10 # immigration times inside one assembly
 t_fin = 100 # Number of time steps
 x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 1 # Functional response, Type I or II
@@ -180,4 +180,4 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
 
     return result_array, rich_seires, # CUE_out # CUE_com_out
 
-A = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
+ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)

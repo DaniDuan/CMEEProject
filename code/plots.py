@@ -15,7 +15,7 @@ Ea_D = np.repeat(3.5,N) # Deactivation energy
 
 # Assembly
 ass = 1 # Assembly times at each temperature
-tv = 2 # immigration times inside one assembly
+tv = 10 # immigration times inside one assembly
 t_fin = 100 # Number of time steps for each temperature
 x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 1 # Functional response, Type I or II
