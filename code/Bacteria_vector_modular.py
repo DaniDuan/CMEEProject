@@ -163,9 +163,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             # CUE = dCdt / (xc*np.einsum('ij,kj->ik', xr, U)) # CUE of single species
             # # CUE = C / np.einsum('ij,kj->ik', xr, U)
             # CUE_out = np.append(CUE_out,np.round(CUE, 5), axis = 0)
-            # # CUE_out = np.nan_to_num(CUE, nan=0)
 
-            # # Richness & Community CUE
+            # # Community CUE
             # for a in range(len(pops)):
             #     dCdt_com = np.sum(np.nan_to_num(dCdt[a,:]/xc[a,:], nan=0))
             #     U_com = np.sum(xr[a,:]*U[np.where(pops[a,0:N] >= 0.01)]) # Community level uptake

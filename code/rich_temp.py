@@ -16,7 +16,7 @@ Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfi
 t_n = 30 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
-ass = 1 # Assembly number, i.e. how many times the system can assemble
+ass = 6 # Assembly number, i.e. how many times the system can assemble
 tv = 10 # immigration times inside one assembly
 t_fin = 50 # Number of time steps
 x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
@@ -34,7 +34,7 @@ def funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
         T = 273.15 + 10 + 5 * i # Temperature
         rich_seires = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)[1]
         rich_mean = np.mean(rich_seires, axis = 0)
-        rich_ci = 1.96 * np.std(rich_seires,axis = 0)/rich_mean
+        rich_ci = 1.96 * np.std(rich_seires,axis = 0)/(ass**0.5)
         rich_temp_mean = np.append(rich_temp_mean, rich_mean[tv-1])
         rich_temp_ci = np.append(rich_temp_ci, rich_ci[tv-1])
     

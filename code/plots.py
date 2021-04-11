@@ -32,7 +32,6 @@ def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     plt.ylabel('Resources')
     plt.xlabel('Time')
     # plt.title('Consumer-Resource population dynamics')
-    # plt.legend([Line2D([0], [0], color='green', lw=2), Line2D([0], [0], color='blue', lw=2)], ['Consumer', 'Resources'])
     plt.show()
 
     plt.plot(t_plot, result_array[:,0:N], 'g-', linewidth=0.7)
@@ -49,18 +48,9 @@ def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     # # plt.legend([Line2D([0], [0], color='red', lw=2), Line2D([0], [0], color='black', lw=2)], ['Species level', 'Community level'])
     # plt.show()
 
-    # plt.plot(t_plot, CUE_out_U, 'r-', label = 'Species level', linewidth=0.7)
-    # plt.plot(t_plot, CUE_com_U_out, 'k-', label = 'Community level', linewidth = 0.5)
-    # # plt.ylim(bottom = -1)
-    # plt.ylabel('CUE (U & R)')
-    # plt.xlabel('Time')
-    # plt.title('Carbon Use Efficiency dynamics(U & R)')
-    # plt.legend([Line2D([0], [0], color='red', lw=2), Line2D([0], [0], color='black', lw=2)], ['Species level', 'Community level'])
-    # plt.show()
-
     t_rich = np.linspace(t_fin, tv*t_fin, tv)
     rich_mean = np.mean(rich_seires, axis = 0)
-    rich_ci = 1.96 * np.std(rich_seires,axis = 0)/rich_mean
+    rich_ci = 1.96 * np.std(rich_seires,axis = 0)/(ass**0.5)
     plt.plot(t_rich, rich_mean, 'c-', linewidth=0.7)
     plt.fill_between(t_rich, rich_mean - rich_ci, rich_mean + rich_ci, color='b', alpha=.1)
     plt.ylabel('Richness')
