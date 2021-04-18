@@ -31,7 +31,7 @@ def funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     rich_temp_ci = np.empty((0))
 
     for i in range(T_c):
-        T = 273.15 + 10 + 5 * i # Temperature
+        T = 273.15 + 15 + 5 * i # Temperature
         rich_seires = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)[1]
         rich_mean = np.mean(rich_seires, axis = 0)
         rich_ci = 1.96 * np.std(rich_seires,axis = 0)/(ass**0.5)
@@ -48,4 +48,4 @@ def funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     return rich_temp_mean
 
     
-funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
+# funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, x0, Ea_D, typ, K)

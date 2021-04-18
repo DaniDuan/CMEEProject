@@ -16,8 +16,8 @@ import random
 
 ######## Set up parameters ###########
 
-N = 50 # Number of consumers
-M = 50 # Number of resources
+N = 10 # Number of consumers
+M = 5 # Number of resources
 
 # Temperature params
 T = 273.15 + 25 # Temperature
@@ -25,11 +25,11 @@ Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 # pk = 20 # Peak above Tref, degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
-t_n = 30 # Number of temperatures to run the model at, model starts at 20
+t_n = 25 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
 ass = 1 # Assembly number, i.e. how many times the system can assemble
-tv = 10 # immigration times inside one assembly
+tv = 300 # immigration times inside one assembly
 t_fin = 100 # Number of time steps
 x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 1 # Functional response, Type I or II
@@ -48,8 +48,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
     CUE_out = np.empty((0,N))
     rich_seires = np.empty((0,tv))
+    U_out = np.empty((0,M))
     t_point = 0
-    
 
 
     for i in range(ass):
@@ -57,14 +57,12 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
         # Set up Ea (activation energy) and B0 (normalisation constant)
         # Based on Tom Smith's observations
         Ea_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:N] # Ea for uptake
-        Ea_R = Ea_U - 0.8 # Ea for respiration, which should always be lower than Ea_U so 'peaks' later
+        Ea_R = Ea_U - 0.6 # Ea for respiration, which should always be lower than Ea_U so 'peaks' later
         B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4 # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
         B_R = (10**(1.29 + (-1.25 * Ea_R))) # B0 for respiration
 
-        pk_U = np.random.normal(25, 3, size = N)
-        pk_R = pk_U + 2
-        T_pk_R = Tref + pk_R 
-        T_pk_U = Tref + pk_U
+        T_pk_U = Tref + np.random.normal(32, 5, size = N)
+        T_pk_R = T_pk_U + 3
 
         p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  # Resource input
 
@@ -113,6 +111,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             # Find which consumers have gone extinct
             rem_find = pops[t_fin-1,0:N] # Get the consumer concentrations from last timestep
             ext = np.where(rem_find<0.01) # Find which consumers have a concentration < 0.01 g/mL, i.e. are extinct
+            sur = np.where(rem_find>0.01)
+            U_out = np.append(U_out, U[sur[0]], axis = 0)
             rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
 
             # Richness
@@ -135,8 +135,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             B_R = 10**(1.29 + (-1.25 * Ea_R))
 
             # New Tpeak
-            pk_U = np.random.normal(25, 3, size = len(rem_find[ext]))
-            pk_R = pk_U + 2
+            pk_U = np.random.normal(32, 5, size = len(rem_find[ext]))
+            pk_R = pk_U + 3
             T_pk_R = Tref + pk_R
             T_pk_U = Tref + pk_U
 
@@ -149,20 +149,12 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
 
             result_array = np.append(result_array, pops, axis=0)
 
-
             # # CUE
-            # xc =  pops[:,0:N] # consumer
-            # r =  pops[:,N:N+M] # resources
-            # if typ == 2:
-            #     xr = r /(K + r) # type 2, monod function
-            # else:
-            #     xr = r #type 1 
-            # SL = (1 - l_sum) * xr
-            # C = np.einsum('ij,kj->ik', SL, U) - R
-            # dCdt = xc * C
-            # CUE = dCdt / (xc*np.einsum('ij,kj->ik', xr, U)) # CUE of single species
+            # dCdt = pops[:,0:N] * ((1 - l_sum) * pops[:,N:N+M] @ U.transpose() - R)
+            # CUE = dCdt / (pops[:,0:N] * (pops[:,N:N+M] @ U.transpose())) # CUE of single species
             # # CUE = C / np.einsum('ij,kj->ik', xr, U)
             # CUE_out = np.append(CUE_out,np.round(CUE, 5), axis = 0)
+
 
             # # Community CUE
             # for a in range(len(pops)):
@@ -177,6 +169,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
         # p = p + 1
         rich_seires = np.append(rich_seires, [rich], axis = 0)
 
-    return result_array, rich_seires, # CUE_out # CUE_com_out
+    return result_array, rich_seires, U_out#, CUE_out
 
-ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
+B = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)

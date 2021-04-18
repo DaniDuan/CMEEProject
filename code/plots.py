@@ -4,19 +4,19 @@ import matplotlib.pylab as plt
 from matplotlib.lines import Line2D
 
 ########## Setting Parameters ###########
-N = 5 # Number of consumers
-M = 5 # Number of resources
+N = 25 # Number of consumers
+M = 50 # Number of resources
 
 # Temperature params
-T = 273.15 + 25 # Temperature
+T = 273.15 + 30 # Temperature
 Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy
 
 # Assembly
 ass = 1 # Assembly times at each temperature
-tv = 10 # immigration times inside one assembly
-t_fin = 100 # Number of time steps for each temperature
+tv = 5 # immigration times inside one assembly
+t_fin = 50 # Number of time steps for each temperature
 x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
 typ = 1 # Functional response, Type I or II
 K = 0.5 # Half saturation constant for Monod equation(Type II)
@@ -24,7 +24,7 @@ K = 0.5 # Half saturation constant for Monod equation(Type II)
 
 def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     
-    result_array, rich_seires = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
+    result_array, rich_seires, U_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
 
     t_plot = np.linspace(0,len(result_array),len(result_array))
     
@@ -73,6 +73,11 @@ def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     # plt.xlabel('Time')
     # plt.show()
 
-    return # CUE_out
+    return  CUE_out
+
+# import time
+# start = time.time()
 
 plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
+
+# print((time.time() - start)/60)
