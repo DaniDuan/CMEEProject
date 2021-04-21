@@ -16,11 +16,11 @@ import random
 
 ######## Set up parameters ###########
 
-N = 10 # Number of consumers
-M = 5 # Number of resources
+N = 25 # Number of consumers
+M = 50 # Number of resources
 
 # Temperature params
-T = 273.15 + 25 # Temperature
+T = 273.15 + 30 # Temperature
 Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 # pk = 20 # Peak above Tref, degrees C
 Ma = 1 # Mass
@@ -29,16 +29,15 @@ t_n = 25 # Number of temperatures to run the model at, model starts at 20
 
 # Assembly
 ass = 1 # Assembly number, i.e. how many times the system can assemble
-tv = 300 # immigration times inside one assembly
-t_fin = 100 # Number of time steps
-x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
+tv = 10 # immigration times inside one assembly
+t_fin = 50 # Number of time steps
 typ = 1 # Functional response, Type I or II
 K = 1 # Half saturation constant
 
 
 ##### Intergrate system forward #####
 
-def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
+def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K):
     # pars_out = np.empty((t_n-20, 19)
 
     # Setted Parameters
@@ -48,11 +47,14 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
     CUE_out = np.empty((0,N))
     rich_seires = np.empty((0,tv))
-    U_out = np.empty((0,M))
-    t_point = 0
+    # U_out = np.empty((0,M))
+    U_out_total = np.empty((0,M))
+    sur_rate = np.empty((0,4))
 
 
     for i in range(ass):
+
+        x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
 
         # Set up Ea (activation energy) and B0 (normalisation constant)
         # Based on Tom Smith's observations
@@ -83,23 +85,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
 
             # Run model
             pops = odeint(mod.metabolic_model, y0=x0, t=t, args = pars) # Integrate
-
-            # # Steady state test
-            # ss_test = np.round(abs((pops[t_fin-1,0:N]) - (pops[t_fin-50,0:N])),3) # Find difference between last timestep and timestep at t_fin - 50 (i.e. 150 if t_fin = 200)
-            # while True:
-            #     if  np.any(ss_test > 0):    # If there is a difference then that consumer not yet reached steady state
-            #         t = np.linspace(0,99,100) # reset t so shorter, only 100 timesteps
-            #         pops2 = odeint(mod.metabolic_model, y0=pops[t_fin-1,:], t=t, args=pars) # re-run model using last timestep concentrations of consumers and resources
-            #         pops = np.append(pops, pops2, axis=0) # append results of additional run to orginial run
-            #         t_fin = t_fin + 100 # adjust timesteps number
-            #         ss_test = np.round(abs((pops[t_fin-1,0:N]) - (pops[t_fin-50,0:N])),3) # Find again if consumers reached steady state now
-            #     elif np.all(ss_test == 0):
-            #         break # Once no difference in consumer concentration then stop performing additional model runs 
-            #     else:
-            #         pops=pops # If at steady state then nothing happens
-            
-            # t_fin = 100
-            # t_point = t_point + t_fin
             pops = np.round(pops, 7)
 
 
@@ -112,14 +97,33 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             rem_find = pops[t_fin-1,0:N] # Get the consumer concentrations from last timestep
             ext = np.where(rem_find<0.01) # Find which consumers have a concentration < 0.01 g/mL, i.e. are extinct
             sur = np.where(rem_find>0.01)
-            U_out = np.append(U_out, U[sur[0]], axis = 0)
-            rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
+            # U_out = np.append(U_out, U[sur[0]], axis = 0)
+            U_out_total = np.append(U_out_total, U, axis = 0)
+
+
+            jaccard = np.zeros((N,N)) # Competition
+            np.fill_diagonal(jaccard,1)
+            for i in range(N):
+                for j in range(N):
+                   jaccard[i,j] = np.sum(np.minimum(U[i,],U[j,]))/np.sum(np.maximum(U[i,],U[j,])) 
+            comp = np.mean(jaccard, axis = 0)
+            U_ac = comp*np.sum(U,axis=1)
+
+            U_range = np.arange(0,400,100)
+            # U_range = np.arange(np.floor(np.min(U_ac)/100)*100, np.ceil(np.max(U_ac)/100)*100, 100)
+            s_total = np.empty((0))
+            s_sur = np.empty((0))
+            for i in range(len(U_range)):
+                 s_total = np.append(s_total, ((U_ac >= U_range[i]) & (U_ac < U_range[i]+100)).sum())
+                 s_sur = np.append(s_sur, ((U_ac[sur[0]] >= U_range[i]) & (U_ac[sur[0]] < U_range[i]+100)).sum())
+            sur_rate = np.append(sur_rate, [np.array(np.nan_to_num(s_sur/s_total, nan=0))], axis = 0)
+
 
             # Richness
             rich = np.append(rich, N - len(rem_find[ext])) # Richness
             # t_rich = np.append(t_rich, t_point)
 
-            
+            rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
             x0 = np.concatenate((rem_find, pops[t_fin-1,N:N+M])) # Join new concentrations for consumers with those of resources
             
 
@@ -128,7 +132,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             # New Ea_ and Ea_R
             Ea_tmp_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:len(ext[0])] # Ea for uptake cut to length(ext),i.e. the number of extinct consumers
             Ea_U[ext] = Ea_tmp_U # Replace removed Eas with new Eas
-            Ea_R = Ea_U - 0.8
+            Ea_R = Ea_U - 0.6
 
             # New B0
             B_U = 10**(2.84 + (-4.96 * Ea_U)) + 4
@@ -145,8 +149,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
             U[ext] = U_new
             R_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U, B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext])[1]
             R[ext] = R_new
-
-
+            
             result_array = np.append(result_array, pops, axis=0)
 
             # # CUE
@@ -169,6 +172,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
         # p = p + 1
         rich_seires = np.append(rich_seires, [rich], axis = 0)
 
-    return result_array, rich_seires, U_out#, CUE_out
+    return result_array, rich_seires, l, U_out_total, sur_rate # , CUE_out
 
-B = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
+B = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K)
