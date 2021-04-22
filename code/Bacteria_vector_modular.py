@@ -49,7 +49,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K):
     rich_seires = np.empty((0,tv))
     # U_out = np.empty((0,M))
     U_out_total = np.empty((0,M))
-    sur_rate = np.empty((0,4))
+    U_ac_total = np.empty((0,N))
 
 
     for i in range(ass):
@@ -108,15 +108,16 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K):
                    jaccard[i,j] = np.sum(np.minimum(U[i,],U[j,]))/np.sum(np.maximum(U[i,],U[j,])) 
             comp = np.mean(jaccard, axis = 0)
             U_ac = comp*np.sum(U,axis=1)
+            U_ac_total = np.append(U_ac_total, [U_ac], axis = 0)
 
-            U_range = np.arange(0,400,100)
-            # U_range = np.arange(np.floor(np.min(U_ac)/100)*100, np.ceil(np.max(U_ac)/100)*100, 100)
-            s_total = np.empty((0))
-            s_sur = np.empty((0))
-            for i in range(len(U_range)):
-                 s_total = np.append(s_total, ((U_ac >= U_range[i]) & (U_ac < U_range[i]+100)).sum())
-                 s_sur = np.append(s_sur, ((U_ac[sur[0]] >= U_range[i]) & (U_ac[sur[0]] < U_range[i]+100)).sum())
-            sur_rate = np.append(sur_rate, [np.array(np.nan_to_num(s_sur/s_total, nan=0))], axis = 0)
+            # U_range = np.arange(0,400,100)
+            # # U_range = np.arange(np.floor(np.min(U_ac)/100)*100, np.ceil(np.max(U_ac)/100)*100, 100)
+            # s_total = np.empty((0))
+            # s_sur = np.empty((0))
+            # for i in range(len(U_range)):
+            #      s_total = np.append(s_total, ((U_ac >= U_range[i]) & (U_ac < U_range[i]+100)).sum())
+            #      s_sur = np.append(s_sur, ((U_ac[sur[0]] >= U_range[i]) & (U_ac[sur[0]] < U_range[i]+100)).sum())
+            # sur_rate = np.append(sur_rate, [np.array(np.nan_to_num(s_sur/s_total, nan=0))], axis = 0)
 
 
             # Richness
@@ -172,6 +173,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K):
         # p = p + 1
         rich_seires = np.append(rich_seires, [rich], axis = 0)
 
-    return result_array, rich_seires, l, U_out_total, sur_rate # , CUE_out
+    return result_array, rich_seires, l, U_out_total, U_ac_total # , CUE_out
 
 B = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K)

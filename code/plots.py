@@ -23,7 +23,7 @@ K = 0.5 # Half saturation constant for Monod equation(Type II)
 
 def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     
-    result_array, rich_seires, l, U_out_total, sur_rate = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K)
+    result_array, rich_seires, l, U_out_total, U_ac_total = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K)
 
     t_plot = np.linspace(0,len(result_array),len(result_array))
     
@@ -36,10 +36,6 @@ def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     plt.plot(t_plot, result_array[:,0:N], 'g-', linewidth=0.7)
     plt.ylabel('Consumers')
     plt.xlabel('Time')
-    plt.show()
-
-    plt.boxplot(sur_rate)
-    plt.xticks([1, 2, 3, 4], ['0-100', '100-200', '200-300', '300-400'])
     plt.show()
 
     # plt.plot(t_plot, CUE_out, 'r-', label = 'Species level', linewidth=0.7)
