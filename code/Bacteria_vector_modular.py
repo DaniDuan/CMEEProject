@@ -20,16 +20,17 @@ N = 25 # Number of consumers
 M = 50 # Number of resources
 
 # Temperature params
-T = 273.15 + 30 # Temperature
+T = 273.15 + 25 # Temperature
 Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 # pk = 20 # Peak above Tref, degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
-t_n = 25 # Number of temperatures to run the model at, model starts at 20
+Ea_diff = 0.2
+lf = 0.4 # Leakage
 
 # Assembly
 ass = 1 # Assembly number, i.e. how many times the system can assemble
-tv = 10 # immigration times inside one assembly
+tv = 100 # immigration times inside one assembly
 t_fin = 50 # Number of time steps
 typ = 1 # Functional response, Type I or II
 K = 1 # Half saturation constant
@@ -37,7 +38,10 @@ K = 1 # Half saturation constant
 
 ##### Intergrate system forward #####
 
-def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K):
+def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, typ, K):
+    '''
+    Main function for the simulation of resource uptake and growth of microbial communities.
+    '''
     # pars_out = np.empty((t_n-20, 19)
 
     # Setted Parameters
@@ -59,19 +63,18 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K):
         # Set up Ea (activation energy) and B0 (normalisation constant)
         # Based on Tom Smith's observations
         Ea_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:N] # Ea for uptake
-        Ea_R = Ea_U - 0.6 # Ea for respiration, which should always be lower than Ea_U so 'peaks' later
+        Ea_R = Ea_U - Ea_diff # Ea for respiration, which should always be lower than Ea_U so 'peaks' later
         B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4 # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
         B_R = (10**(1.29 + (-1.25 * Ea_R))) # B0 for respiration
-
         T_pk_U = Tref + np.random.normal(32, 5, size = N)
         T_pk_R = T_pk_U + 3
 
         p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  # Resource input
 
         # Set up model
-        U = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[0] # Uptake
-        R = par.params(N, M, T, k, Tref, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[1] # Respiration
-        l = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D)[2] # Leakage
+        U = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf)[0] # Uptake
+        R = par.params(N, M, T, k, Tref, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf)[1] # Respiration
+        l = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf)[2] # Leakage
         l_sum = np.sum(l, axis=1)
 
 
@@ -133,12 +136,11 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K):
             # New Ea_ and Ea_R
             Ea_tmp_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:len(ext[0])] # Ea for uptake cut to length(ext),i.e. the number of extinct consumers
             Ea_U[ext] = Ea_tmp_U # Replace removed Eas with new Eas
-            Ea_R = Ea_U - 0.6
+            Ea_R = Ea_U - Ea_diff
 
             # New B0
             B_U = 10**(2.84 + (-4.96 * Ea_U)) + 4
             B_R = 10**(1.29 + (-1.25 * Ea_R))
-
             # New Tpeak
             pk_U = np.random.normal(32, 5, size = len(rem_find[ext]))
             pk_R = pk_U + 3
@@ -146,9 +148,9 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K):
             T_pk_U = Tref + pk_U
 
             # New U&R
-            U_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U, B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext])[0]
+            U_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U, B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[0]
             U[ext] = U_new
-            R_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U, B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext])[1]
+            R_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U, B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[1]
             R[ext] = R_new
             
             result_array = np.append(result_array, pops, axis=0)
@@ -175,4 +177,3 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K):
 
     return result_array, rich_seires, l, U_out_total, U_ac_total # , CUE_out
 
-B = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K)

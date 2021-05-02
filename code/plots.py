@@ -12,6 +12,7 @@ T = 273.15 + 25 # Temperature
 Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy
+lf = 0.4 # Leakage
 
 # Assembly
 ass = 1 # Assembly times at each temperature
@@ -22,8 +23,10 @@ K = 0.5 # Half saturation constant for Monod equation(Type II)
 
 
 def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
-    
-    result_array, rich_seires, l, U_out_total, U_ac_total = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, typ, K)
+    '''
+    Plotting time series of resource, species biomass and community richness.
+    '''
+    result_array, rich_seires, l, U_out_total, U_ac_total = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, typ, K)
 
     t_plot = np.linspace(0,len(result_array),len(result_array))
     

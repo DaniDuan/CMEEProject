@@ -2,6 +2,9 @@
 import numpy as np
 
 def metabolic_model(x,t, U, R, l, p, l_sum, N, M, K, typ):
+    '''
+    ODEs for integration.
+    '''
     A = np.empty((N+M))
     A[0:N] = x[0:N] * (np.sum((1 - l_sum) * x[N:N+M] * U, axis=1) - R)
     # A[N:N+M] = p - np.multiply((x[0:N] @ U).transpose(), x[N:N+M]) + np.einsum('i,k,ik,kj->j', x[0:N], x[N:N+M], U, l, optimize = True)
