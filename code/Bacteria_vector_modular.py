@@ -16,7 +16,7 @@ import random
 
 ######## Set up parameters ###########
 
-N = 25 # Number of consumers
+N = 35 # Number of consumers
 M = 50 # Number of resources
 
 # Temperature params
@@ -27,6 +27,7 @@ Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
 Ea_diff = 0.2
 lf = 0.4 # Leakage
+p_value = 1 # External input resource concentration
 
 # Assembly
 ass = 1 # Assembly number, i.e. how many times the system can assemble
@@ -38,7 +39,7 @@ K = 1 # Half saturation constant
 
 ##### Intergrate system forward #####
 
-def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, typ, K):
+def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, typ, K):
     '''
     Main function for the simulation of resource uptake and growth of microbial communities.
     '''
@@ -50,10 +51,11 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, typ, K):
 
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
     CUE_out = np.empty((0,N))
-    rich_seires = np.empty((0,tv))
+    rich_series = np.empty((0,tv))
     # U_out = np.empty((0,M))
     U_out_total = np.empty((0,M))
     U_ac_total = np.empty((0,N))
+    R_out = np.empty((0))
 
 
     for i in range(ass):
@@ -69,7 +71,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, typ, K):
         T_pk_U = Tref + np.random.normal(32, 5, size = N)
         T_pk_R = T_pk_U + 3
 
-        p = np.concatenate((np.array([1]), np.repeat(1, M-1)))  # Resource input
+        p = np.repeat(p_value, M)  # Resource input
 
         # Set up model
         U = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf)[0] # Uptake
@@ -102,6 +104,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, typ, K):
             sur = np.where(rem_find>0.01)
             # U_out = np.append(U_out, U[sur[0]], axis = 0)
             U_out_total = np.append(U_out_total, U, axis = 0)
+            R_out = np.append(R_out, np.mean(R))
 
 
             jaccard = np.zeros((N,N)) # Competition
@@ -173,7 +176,15 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, typ, K):
         # x0 = pops[len(pops)-1,:]
         # x0[N:N+M] = x0[N:N+M] + 0.1
         # p = p + 1
-        rich_seires = np.append(rich_seires, [rich], axis = 0)
+        rich_series = np.append(rich_series, [rich], axis = 0)
 
-    return result_array, rich_seires, l, U_out_total, U_ac_total # , CUE_out
+    return result_array, rich_series, l, U_out_total, U_ac_total, R_out# , CUE_out
 
+
+# result_array, rich_series, l, U_out_total, U_ac_total, R_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, typ, K)
+# U_out = np.array([np.mean(U_out_total[N*i:N*(i+1)-1,:]) for i in range(tv*ass)])
+# fig, ax1 = plt.subplots()
+# ax2 = ax1.twiny()
+# ax1.scatter(U_out, np.ndarray.flatten(rich_series), c = 'r')
+# ax2.scatter(R_out, np.ndarray.flatten(rich_series), c = "b")
+# plt.show()

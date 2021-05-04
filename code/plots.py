@@ -13,6 +13,8 @@ Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy
 lf = 0.4 # Leakage
+p_value = 1 # External input resource concentration
+
 
 # Assembly
 ass = 1 # Assembly times at each temperature
@@ -22,11 +24,11 @@ typ = 1 # Functional response, Type I or II
 K = 0.5 # Half saturation constant for Monod equation(Type II)
 
 
-def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
+def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, lf, p_value, typ, K):
     '''
     Plotting time series of resource, species biomass and community richness.
     '''
-    result_array, rich_seires, l, U_out_total, U_ac_total = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, typ, K)
+    result_array, rich_series, l, U_out_total, U_ac_total = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K)
 
     t_plot = np.linspace(0,len(result_array),len(result_array))
     
@@ -51,8 +53,8 @@ def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
     # plt.show()
 
     t_rich = np.linspace(t_fin, tv*t_fin, tv)
-    rich_mean = np.mean(rich_seires, axis = 0)
-    rich_ci = 1.96 * np.std(rich_seires,axis = 0)/(ass**0.5)
+    rich_mean = np.mean(rich_series, axis = 0)
+    rich_ci = 1.96 * np.std(rich_series,axis = 0)/(ass**0.5)
     plt.plot(t_rich, rich_mean, 'c-', linewidth=0.7)
     plt.fill_between(t_rich, rich_mean - rich_ci, rich_mean + rich_ci, color='b', alpha=.1)
     plt.ylabel('Richness')
@@ -80,6 +82,6 @@ def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K):
 # import time
 # start = time.time()
 
-plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
+# plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, typ, K)
 
 # print((time.time() - start)/60)
