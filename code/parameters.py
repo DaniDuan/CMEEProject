@@ -24,4 +24,9 @@ def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf):
     fix[M-1][0] = 1
     l = np.transpose(l_raw) * fix
 
+    # l = np.zeros([M,M])
+    # for i in range(M-1): 
+    #     l[i,i+1] = lf
+    # # l[M-1,0] = lf
+
     return U, R, l

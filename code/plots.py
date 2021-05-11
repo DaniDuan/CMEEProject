@@ -4,7 +4,7 @@ import matplotlib.pylab as plt
 from matplotlib.lines import Line2D
 
 ########## Setting Parameters ###########
-N = 25 # Number of consumers
+N = 35 # Number of consumers
 M = 50 # Number of resources
 
 # Temperature params
@@ -12,23 +12,23 @@ T = 273.15 + 25 # Temperature
 Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy
+Ea_diff = 0.2
 lf = 0.4 # Leakage
 p_value = 1 # External input resource concentration
 
-
 # Assembly
 ass = 1 # Assembly times at each temperature
-tv = 10 # immigration times inside one assembly
+tv = 100 # immigration times inside one assembly
 t_fin = 50 # Number of time steps for each temperature
 typ = 1 # Functional response, Type I or II
 K = 0.5 # Half saturation constant for Monod equation(Type II)
 
 
-def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, lf, p_value, typ, K):
+def plot_con_res_CUE(t_fin, N, M, T, Tref, Ma, ass, tv, x0, Ea_D, Ea_diff, lf, p_value, typ, K):
     '''
     Plotting time series of resource, species biomass and community richness.
     '''
-    result_array, rich_series, l, U_out_total, U_ac_total = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K)
+    result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, typ, K)
 
     t_plot = np.linspace(0,len(result_array),len(result_array))
     

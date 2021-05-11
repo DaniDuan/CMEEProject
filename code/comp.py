@@ -31,7 +31,7 @@ def plot_comp(t_fin, N, M, T, Tref, Ma, tv, Ea_D, lf, p_value, typ, K):
     '''
 
     ass = 1
-    result_array, rich_seires, l, U_out_total, U_ac_total = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, typ, K)
+    result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, typ, K)
     
     # uptake = np.array([result_array[i*t_fin:(i+1)*t_fin,0:N] @ U_out_total[i*N:(i+1)*N,:] * result_array[i*t_fin:(i+1)*t_fin,N:N+M] for i in range(tv)])
     # uptake_end = np.array([uptake[i][t_fin-1] for i in range(tv)])
