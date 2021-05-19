@@ -405,3 +405,169 @@ for i in range(len(CUE)):
     EaCUE_values = np.append(EaCUE_values, answer)
 
 EaCUE_values
+
+
+##############################################################################################
+import numpy as np
+from scipy.optimize import fsolve
+
+Tref = 273.15
+T_pk_CUE = Tref + 32
+Ea_D = 3.5
+B0_CUE = 0.114
+k = 0.0000862
+CUE = np.arange(0.2,0.65, 0.05)
+T = Tref + np.arange(0, 45, 5)
+EaCUE_values = np.empty(0)
+for i in range(len(CUE)):
+    Ea_CUE = 0
+    def f(Ea_CUE):
+        return(CUE[i] - B0_CUE * 2.71828**((-Ea_CUE/k) * ((1/T[i])-(1/Tref)))/(1 + (Ea_CUE/(Ea_D - Ea_CUE)) * 2.71828**(Ea_D/k * (1/T_pk_CUE - 1/T[i]))))
+    answer = fsolve(f, 0.5)
+    EaCUE_values = np.append(EaCUE_values, answer)
+np.round(EaCUE_values, 3)
+
+
+np.arange(0.1, 0.46, 0.07)
+
+
+
+
+import numpy as np
+
+M = 5
+lf = 0.4
+l_raw = np.array([[np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
+fix = [[1 if j>=i else 0 for j in range(M)] for i in range(M)]
+# fix[M-1][M-1] = 1
+l = np.transpose(l_raw) * fix
+print(l)
+print(np.sum(l, axis = 1))
+
+
+
+from scipy.integrate import odeint
+from scipy.special import gamma, airy
+y1_0 = 1.0 / 3**(2.0/3.0) / gamma(2.0/3.0)
+y0_0 = -1.0 / 3**(1.0/3.0) / gamma(1.0/3.0)
+y0 = [y0_0, y1_0]
+t = np.arange(0, 4.0, 0.01)
+
+def RHS(y, t):
+    return [t*y[1],y[0]]
+
+%timeit odeint(RHS, y0, t)
+
+def RHS(y, t):
+    y[0],y[1] = t*y[1],y[0]
+    return y
+
+%timeit odeint(RHS, y0, t)
+
+from numba import jit
+@jit
+def RHS(y, t):
+    y[0],y[1] = t*y[1],y[0]
+    return y
+
+
+a, b > 1
+a > 3
+(a - 1/3) / (a + b - 2/3) = 0.8
+
+a = 20
+b = ((a - 1/3) / 0.8) + 2/3 - a
+b
+plt.hist(np.random.beta(a, b, size = 1000))
+plt.show()
+
+
+U0 = 2
+R0 = 1
+T = 273.15 + 0 # Temperature
+Tref = 273.15 + 10 # Reference temperature Kelvin, 10 degrees C
+B_U = np.repeat(U0, N) # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
+B_R = np.repeat(R0, N) # B0 for respiration
+B0_CUE = (U0*(1 - lf) - R0)/U0 # B0 value for CUE
+Ea_U = np.random.beta(35, ((35 - 1/3) / 0.8) + 2/3 - 35, N)
+Ea_R = np.random.beta(35, ((35 - 1/3) / 0.8) + 2/3 - 35, N)
+Ea_CUE = (R0 * (Ea_U - Ea_R))/(U0 * (1 - lf) - R0)
+T_pk_U = Tref + np.random.normal(32, 5, size = N)
+T_pk_R = T_pk_U + 3
+U = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf)[0] # Uptake
+R = par.params(N, M, T, k, Tref, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf)[1] # Respiration
+l = par.params(N, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf)[2] # Leakage
+l_sum = np.sum(l, axis=1)
+
+Ea_CUE = (R0 * (Ea_U - Ea_R))/(U0 * (1 - lf) - R0)
+np.mean((U @ (1 - l_sum) - R)/(np.sum(U, axis = 1)))
+np.mean(Ea_CUE)
+
+result_array[:, 0:N]
+
+rich = np.array([len(np.where(result_array[i,0:N])[0]) for i in range(len(result_array))])
+len(np.where(result_array[i,0:N]>0.01)[0])
+
+
+np.concatenate([np.sum(U_out_total, axis = 1).reshape(ass, N)[i][sur[i]] for i in range(len(sur))]).ravel()
+
+
+all_CUE.append(np.concatenate([CUE_out[i][sur[i]] for i in range(len(sur))]).ravel())
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+Ea_CUE = 0.1
+k = 0.0000862 # Boltzman constant
+Tref = 273.15 + 10 # Reference temperature Kelvin, 0 degrees C
+T = 273.15 + np.linspace(0,30,31) # Temperatures
+T_pk_U = 273.15 + 35
+T_pk_R = T_pk_U + 3
+Ea_D = 3.5 # Deactivation energy
+# B_U = 2 # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
+B_U = 2 * np.exp((-0.8/k) * ((1/Tref)-(1/273.15)))/(1 + (0.8/(Ea_D - 0.8)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref))) # U is always 2 at 0 degree
+B_R = 1 * np.exp((-0.8/k) * ((1/Tref)-(1/273.15)))/(1 + (0.8/(Ea_D - 0.8)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref)))
+Ea_U = 0.8
+Ea_R = 0.8
+
+U_Sharpe = B_U * np.exp((-Ea_U/k) * ((1/T)-(1/Tref)))/(1 + (Ea_U/(Ea_D - Ea_U)) * np.exp(Ea_D/k * (1/T_pk_U - 1/T))) 
+R_Sharpe = B_R * np.exp((-Ea_R/k) * ((1/T)-(1/Tref)))/(1 + (Ea_R/(Ea_D - Ea_R)) * np.exp(Ea_D/k * (1/T_pk_R - 1/T)))
+
+CUE = (U_Sharpe*0.6-R_Sharpe)/U_Sharpe
+CUE_Sharpe = B0_CUE * np.exp((-Ea_CUE/k) * ((1/T)-(1/Tref)))/(1 + (Ea_CUE/(Ea_D - Ea_CUE)) * np.exp(Ea_D/k * (1/T_pk_CUE - 1/T)))
+np.round(CUE,3)
+np.round(CUE_Sharpe,3)
+
+plt.plot(T - 273.15, CUE, 'g-', linewidth=0.7, label = 'CUE')
+plt.plot(T - 273.15, CUE_Sharpe, 'b-', linewidth=0.7, label = 'CUE_Sharpe')
+plt.legend()
+plt.show()
+
+fig, ax1 = plt.subplots()
+ax2 = ax1.twinx()
+ax1.plot(T - 273.15, U_Sharpe, 'r-', linewidth=0.7)
+ax2.plot(T - 273.15, R_Sharpe, 'b-', linewidth=0.7)
+ax1.set_xlabel('Temperature ($^\circ$C)')
+ax1.set_ylabel('Uptake Rate', color = 'r')
+ax2.set_ylabel('Respiration Rate', color = 'b')
+plt.title('Modified Sharpe-Schoolfield Temperature Dependence')
+plt.show()
+
+# 10 degrees, U & R
+# 6.63991734506992  3.3199649753526126
+
+################################################################
+N = 100
+Tref = 273.15
+Ea_CUE = -0.3
+k = 0.0000862
+Ea_D = 3.5
+lf = 0.4
+B0_CUE = 0.1 * np.exp((-Ea_CUE/k) * ((1/Tref)-(1/273.15)))    
+B_U = 2 * np.exp((-0.8/k) * ((1/Tref)-(1/273.15)))/(1 + (0.8/(Ea_D - 0.8)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref))) # U is always 2 at 0 degree
+B_R = B_U * (1 - lf) - B0_CUE * B_U
+Ea_U = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, N)
+Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
+# 0.675 0.990 0.849
+# 0.437 0.876 0.726

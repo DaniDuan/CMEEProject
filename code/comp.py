@@ -14,6 +14,8 @@ Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
 Ea_diff = 0.6
+U0 = 5
+R0 = 1
 lf = 0.4
 p_value = 1 # External input resource concentration
 
@@ -24,14 +26,14 @@ typ = 1 # Functional response, Type I or II
 K = 1 # Half saturation constant
 
 
-def plot_comp(t_fin, N, M, T, Tref, Ma, tv, Ea_D, lf, p_value, typ, K):
+def plot_comp(t_fin, N, M, T, Tref, Ma, tv, Ea_D, U0, R0, lf, p_value, typ, K):
     '''
     Calculating the actual species resource uptake accounting competition, 
     and returning the survival rate of species with the actual uptake values at different temperatures.
     '''
 
     ass = 1
-    result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, typ, K)
+    result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff,U0, R0, lf, p_value, typ, K)
     
     # uptake = np.array([result_array[i*t_fin:(i+1)*t_fin,0:N] @ U_out_total[i*N:(i+1)*N,:] * result_array[i*t_fin:(i+1)*t_fin,N:N+M] for i in range(tv)])
     # uptake_end = np.array([uptake[i][t_fin-1] for i in range(tv)])

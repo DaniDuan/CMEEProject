@@ -11,66 +11,53 @@ import size_temp_funcs as st
 import parameters as par
 import model_func as mod
 import random
-from scipy.optimize import fsolve
 
 ######### Main Code ###########
 
 ######## Set up parameters ###########
 
-N = 15 # Number of consumers
-M = 15 # Number of resources
+N = 100 # Number of consumers
+M = 50 # Number of resources
 
 # Temperature params
-T = 273.15 + 35 # Temperature
-Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
+T = 273.15 + 0 # Temperature
+Tref = 273.15 + 10 # Reference temperature Kelvin, 10 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
-Ea_diff = 0.2
+Ea_CUE = 0.3
 lf = 0.4 # Leakage
 p_value = 1 # External input resource concentration
 
 # Assembly
-ass = 2 # Assembly number, i.e. how many times the system can assemble
-tv = 100 # immigration times inside one assembly
-t_fin = 50 # Number of time steps
+ass = 30 # Assembly number, i.e. how many times the system can assemble
+tv = 1 # immigration times inside one assembly
+t_fin = 3000 # Number of time steps
 typ = 1 # Functional response, Type I or II
 K = 1 # Half saturation constant
 
 
-##### Function for calculating CUE #####
-def CUE_calc(U, R, T_pk_U, l_sum): 
-    k = 0.0000862 # Boltzman constant
-    B0_CUE = 0.175 
-    T_pk_CUE = T_pk_U #CUE paper
-    Ea_D_CUE = np.repeat(3.5,N)
-    CUE = (U @ (1 - l_sum)*0.1 - R)/(np.sum(U, axis = 1)*0.1)
-    EaCUE_values = np.empty(0)
-    for i in range(len(CUE)):
-        Ea_CUE = 0
-        def f(Ea_CUE):
-            return(CUE[i] - B0_CUE * 2.71828**((-Ea_CUE/k) * ((1/T)-(1/Tref)))/(1 + (Ea_CUE/(Ea_D[i] - Ea_CUE)) * 2.71828**(Ea_D[i]/k * (1/T_pk_CUE[i] - 1/T))))
-        answer = fsolve(f, 0.5)
-        EaCUE_values = np.append(EaCUE_values, answer)
-
-    return CUE, EaCUE_values
-
-
 ##### Intergrate system forward #####
 
-def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, typ, K):
+def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
     '''
     Main function for the simulation of resource uptake and growth of microbial communities.
     '''
 
     # Setted Parameters
     k = 0.0000862 # Boltzman constant
+    
+    # B0_CUE = 0.1 * np.exp((-Ea_CUE/k) * ((1/Tref)-(1/273.15)))    
+    B_U = 2 * np.exp((-0.8/k) * ((1/Tref)-(1/273.15)))/(1 + (0.8/(Ea_D - 0.8)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref))) # U is always 2 at 0 degree
+    B_R = 1 * np.exp((-0.8/k) * ((1/Tref)-(1/273.15)))/(1 + (0.8/(Ea_D - 0.8)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref)))
+    # B_R = B_U * (1 - lf) - B0_CUE * B_U
+
 
     ### Creating empty array for storing data ###
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
     rich_series = np.empty((0,tv))
     U_out_total = np.empty((0,M))
     U_ac_total = np.empty((0,N))
-    R_out = np.empty((0))
+    R_out = np.empty((0, N))
     CUE_out = np.empty((0,N))
     Ea_CUE_out = np.empty((0,N))
 
@@ -79,18 +66,15 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, 
 
         ### Resetting values for every assembly ###
 
-        x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (0.1)))) # Starting concentration for resources and consumers
+        x0 = np.concatenate((np.full([N], (0.1)),np.full([M], (1)))) # Starting concentration for resources and consumers
 
         # Set up Ea (activation energy) and B0 (normalisation constant) based on Tom Smith's observations
-        Ea_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:N] # Ea for uptake
-        Ea_R = Ea_U - Ea_diff # Ea for respiration, which should always be lower than Ea_U so 'peaks' later
-        # B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4
-        # B_R = (10**(1.29 + (-1.25 * Ea_R))) + 1.2
-        B_U = (10**(2.84 + (-4.96 * Ea_U))) + 30 # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
-        B_R = (10**(1.29 + (-1.25 * Ea_R))) # B0 for respiration
-        T_pk_U = Tref + np.random.normal(32, 5, size = N)
+        T_pk_U = 273.15 + np.random.normal(35, 5, size = N)
         T_pk_R = T_pk_U + 3
-
+        Ea_U = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, N)
+        Ea_R = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, N)
+        # Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
+        
         p = np.repeat(p_value, M)  # Resource input
         # p = np.arange(M,0,-1)
         # p = np.concatenate((np.array([1,1,1]), np.repeat(0, M-3)))
@@ -123,7 +107,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, 
             ext = np.where(rem_find<0.01) # Find which consumers have a concentration < 0.01 g/mL, i.e. are extinct
             sur = np.where(rem_find>0.01)
             U_out_total = np.append(U_out_total, U, axis = 0)
-            R_out = np.append(R_out, np.mean(R))
+            R_out = np.append(R_out, [R], axis = 0)
             
             # Competition for resources
             jaccard = np.zeros((N,N)) # Competition
@@ -133,38 +117,34 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, 
             U_ac_total = np.append(U_ac_total, [comp*np.sum(U,axis=1)], axis = 0)
 
             # Richness
-            rich = np.append(rich, N - len(rem_find[ext])) # Richness
+            rich = np.append(rich, len(np.where(rem_find)[0])) # Richness
 
-            # CUE and Ea_CUE
-            CUE_result, Ea_CUE_result =  CUE_calc(U, R, T_pk_U, l_sum)
-            CUE_out = np.append(CUE_out, [CUE_result], axis = 0)
-            Ea_CUE_out = np.append(Ea_CUE_out, [Ea_CUE_result], axis = 0)
+            # CUE
+            CUE = (U @ (1 - l_sum) - R)/(np.sum(U, axis = 1))
+            CUE_out = np.append(CUE_out, [CUE], axis = 0)
+            Ea_CUE_out = np.append(Ea_CUE_out, [B_R*(Ea_U - Ea_R)/(B_U*(1 - lf) - B_R)], axis = 0)
 
-            ### Invasion ###
+            # ### Invasion ###
 
-            rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
-            x0 = np.concatenate((rem_find, pops[t_fin-1,N:N+M])) # Join new concentrations for consumers with those of resources
+            # rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
+            # x0 = np.concatenate((rem_find, pops[t_fin-1,N:N+M])) # Join new concentrations for consumers with those of resources
             
-            # New Ea_ and Ea_R
-            Ea_tmp_U = np.round(np.random.normal(1.5, 0.01, N),3)[0:len(ext[0])] # Ea for uptake cut to length(ext),i.e. the number of extinct consumers
-            Ea_U[ext] = Ea_tmp_U # Replace removed Eas with new Eas
-            Ea_R = Ea_U - Ea_diff
+            # # New Ea_ and Ea_R
+            # Ea_U[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
+            # Ea_R[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
+            # # Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
 
-            # New B0
-            B_U = 10**(2.84 + (-4.96 * Ea_U)) + 30
-            B_R = 10**(1.29 + (-1.25 * Ea_R)) # + 1.2
+            # # New Tpeak
+            # pk_U = np.random.normal(35, 5, size = len(rem_find[ext]))
+            # pk_R = pk_U + 3
+            # T_pk_R[ext] = 273.15 + pk_R
+            # T_pk_U[ext] = 273.15 + pk_U
 
-            # New Tpeak
-            pk_U = np.random.normal(32, 5, size = len(rem_find[ext]))
-            pk_R = pk_U + 3
-            T_pk_R[ext] = Tref + pk_R
-            T_pk_U[ext] = Tref + pk_U
-
-            # New U&R
-            U_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_R[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[0]
-            U[ext] = U_new
-            R_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[1]
-            R[ext] = R_new
+            # # New U&R
+            # U_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_R[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[0]
+            # U[ext] = U_new
+            # R_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[1]
+            # R[ext] = R_new
             
             ### Storing simulation results ###
             result_array = np.append(result_array, pops, axis=0)
@@ -194,8 +174,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, 
 
     return result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out
 
-
-# result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_diff, lf, p_value, typ, K)
+# result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_CUE, lf, p_value, typ, K)
 # U_out = np.array([np.mean(U_out_total[N*i:N*(i+1)-1,:]) for i in range(tv*ass)])
 # fig, ax1 = plt.subplots()
 # ax2 = ax1.twiny()
