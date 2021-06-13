@@ -475,10 +475,11 @@ a, b > 1
 a > 3
 (a - 1/3) / (a + b - 2/3) = 0.8
 
-a = 20
-b = ((a - 1/3) / 0.8) + 2/3 - a
+a = 15
+b = ((a - 1/3) / (0.67/4)) + 2/3 - a
+# np.mean(np.random.beta(a, ((a - 1/3) / 0.67) + 2/3 - a, 5000))
 b
-plt.hist(np.random.beta(a, b, size = 1000))
+plt.hist(np.random.beta(a, b, 50000)*4)
 plt.show()
 
 
@@ -518,24 +519,26 @@ all_CUE.append(np.concatenate([CUE_out[i][sur[i]] for i in range(len(sur))]).rav
 import numpy as np
 import matplotlib.pyplot as plt
 
-Ea_CUE = 0.1
 k = 0.0000862 # Boltzman constant
 Tref = 273.15 + 10 # Reference temperature Kelvin, 0 degrees C
 T = 273.15 + np.linspace(0,30,31) # Temperatures
 T_pk_U = 273.15 + 35
 T_pk_R = T_pk_U + 3
+lf = 0.4
 Ea_D = 3.5 # Deactivation energy
 # B_U = 2 # B0 for uptake - ** NB The '+4' term is added so B_U>> B_R, otherwise often the both consumers can die and the resources are consumed
 B_U = 2 * np.exp((-0.8/k) * ((1/Tref)-(1/273.15)))/(1 + (0.8/(Ea_D - 0.8)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref))) # U is always 2 at 0 degree
-B_R = 1 * np.exp((-0.8/k) * ((1/Tref)-(1/273.15)))/(1 + (0.8/(Ea_D - 0.8)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref)))
+B_R = 1 * np.exp((-0.67/k) * ((1/Tref)-(1/273.15)))/(1 + (0.67/(Ea_D - 0.67)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref)))
 Ea_U = 0.8
-Ea_R = 0.8
+Ea_R = 0.67
+Ea_CUE = B_R*(Ea_U - Ea_R)/(B_U*(1 - lf) - B_R)
 
+B0_CUE = 0.1 * np.exp((-Ea_CUE/k) * ((1/Tref)-(1/273.15)))
 U_Sharpe = B_U * np.exp((-Ea_U/k) * ((1/T)-(1/Tref)))/(1 + (Ea_U/(Ea_D - Ea_U)) * np.exp(Ea_D/k * (1/T_pk_U - 1/T))) 
 R_Sharpe = B_R * np.exp((-Ea_R/k) * ((1/T)-(1/Tref)))/(1 + (Ea_R/(Ea_D - Ea_R)) * np.exp(Ea_D/k * (1/T_pk_R - 1/T)))
 
 CUE = (U_Sharpe*0.6-R_Sharpe)/U_Sharpe
-CUE_Sharpe = B0_CUE * np.exp((-Ea_CUE/k) * ((1/T)-(1/Tref)))/(1 + (Ea_CUE/(Ea_D - Ea_CUE)) * np.exp(Ea_D/k * (1/T_pk_CUE - 1/T)))
+CUE_Sharpe = B0_CUE * np.exp((-Ea_CUE/k) * ((1/T)-(1/Tref)))/(1 + (Ea_CUE/(Ea_D - Ea_CUE)) * np.exp(Ea_D/k * (1/(273.15+27) - 1/T)))
 np.round(CUE,3)
 np.round(CUE_Sharpe,3)
 
@@ -571,3 +574,93 @@ Ea_U = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, N)
 Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
 # 0.675 0.990 0.849
 # 0.437 0.876 0.726
+
+
+
+from mpl_toolkits.axes_grid1 import host_subplot
+from mpl_toolkits import axisartist
+import matplotlib.pyplot as plt
+
+host = host_subplot(111, axes_class=axisartist.Axes)
+plt.subplots_adjust(right=0.75)
+
+par1 = host.twinx()
+par2 = host.twinx()
+
+par2.axis["right"] = par2.new_fixed_axis(loc="right", offset=(60, 0))
+
+par1.axis["right"].toggle(all=True)
+par2.axis["right"].toggle(all=True)
+
+p1, = host.plot([0, 1, 2], [0, 1, 2], label="Density")
+p2, = par1.plot([0, 1, 2], [0, 3, 2], label="Temperature")
+p3, = par2.plot([0, 1, 2], [50, 30, 15], label="Velocity")
+
+host.set_xlim(0, 2)
+host.set_ylim(0, 2)
+par1.set_ylim(0, 4)
+par2.set_ylim(1, 65)
+
+host.set_xlabel("Distance")
+host.set_ylabel("Density")
+par1.set_ylabel("Temperature")
+par2.set_ylabel("Velocity")
+
+host.legend()
+
+host.axis["left"].label.set_color(p1.get_color())
+par1.axis["right"].label.set_color(p2.get_color())
+par2.axis["right"].label.set_color(p3.get_color())
+
+plt.show()
+
+
+import parameters as par
+import size_temp_funcs as st
+import numpy as np
+
+N = 10 # Number of consumers
+M = 5 # Number of resources
+
+# Temperature params
+Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
+pk_U =  273.15 + np.random.normal(35, 5, size = N)
+Ma = 1 # Mass
+Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
+k = 0.0000862 # Boltzman constant
+T_pk = Tref + pk_U # Peak above Tref, Kelvin
+T = 273.15 + 30 # Temperature
+Ea_U = np.random.beta(4, ((4 - 1/3) / 0.82) + 2/3 - 4, N) # Ea for uptake
+B_U = 2 * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref))) # B0 for uptake
+
+U_sum = st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D)
+np.random.seed(0)
+diri = np.transpose(np.random.dirichlet(np.ones(M),N))
+U = np.transpose(diri*U_sum)
+print(U_sum/np.sum(U_sum))
+print(np.std(U_sum/np.sum(U_sum)))
+U/np.repeat(U_sum, M).reshape(N, M)
+
+
+
+import numpy as np
+
+M = 5
+lf = 0.4
+
+l_raw = np.array([[np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
+l = [[l_raw[j,i] if j>=i else 0 for j in range(M)] for i in range(M)]
+l = np.round(l, 3)
+print(np.round(l, 3))
+print(np.sum(l, axis = 1))
+
+A = np.array((1,2,3,0,5))
+plt.scatter(np.repeat(1,5), A)
+plt.scatter(np.repeat(2,5), A)
+plt.show()
+
+
+Ea_D = 3.5
+Tref = 273.15 + np.linspace(0,50,51) # Temperatures
+B_U = np.random.uniform(1, 3, N) * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref))) # U is always 2 at 0 degree
+B_R = np.random.uniform(0, 2, N) * np.exp((-0.67/k) * ((1/Tref)-(1/273.15)))/(1 + (0.67/(Ea_D - 0.67)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref))) 

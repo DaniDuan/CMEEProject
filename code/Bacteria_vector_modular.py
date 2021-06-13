@@ -21,7 +21,7 @@ M = 50 # Number of resources
 
 # Temperature params
 T = 273.15 + 0 # Temperature
-Tref = 273.15 + 10 # Reference temperature Kelvin, 10 degrees C
+Tref = 273.15 + 0 # Reference temperature Kelvin, 10 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
 Ea_CUE = 0.3
@@ -47,8 +47,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
     k = 0.0000862 # Boltzman constant
     
     # B0_CUE = 0.1 * np.exp((-Ea_CUE/k) * ((1/Tref)-(1/273.15)))    
-    B_U = 2 * np.exp((-0.8/k) * ((1/Tref)-(1/273.15)))/(1 + (0.8/(Ea_D - 0.8)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref))) # U is always 2 at 0 degree
-    B_R = 1 * np.exp((-0.8/k) * ((1/Tref)-(1/273.15)))/(1 + (0.8/(Ea_D - 0.8)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref)))
+    B_U = 2 * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref))) # U is always 2 at 0 degree
+    B_R = 1 * np.exp((-0.67/k) * ((1/Tref)-(1/273.15)))/(1 + (0.67/(Ea_D - 0.67)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref)))
     # B_R = B_U * (1 - lf) - B0_CUE * B_U
 
 
@@ -60,6 +60,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
     R_out = np.empty((0, N))
     CUE_out = np.empty((0,N))
     Ea_CUE_out = np.empty((0,N))
+    overlap = np.empty((0,N))
 
 
     for i in range(ass):
@@ -71,8 +72,9 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
         # Set up Ea (activation energy) and B0 (normalisation constant) based on Tom Smith's observations
         T_pk_U = 273.15 + np.random.normal(35, 5, size = N)
         T_pk_R = T_pk_U + 3
-        Ea_U = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, N)
-        Ea_R = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, N)
+        a = 15
+        Ea_U = np.random.beta(a, ((a - 1/3) / (0.82/4)) + 2/3 - a, N)*4
+        Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, N)*4
         # Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
         
         p = np.repeat(p_value, M)  # Resource input
@@ -110,11 +112,12 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
             R_out = np.append(R_out, [R], axis = 0)
             
             # Competition for resources
-            jaccard = np.zeros((N,N)) # Competition
+            jaccard = np.zeros((N,N)) # Niche overlap
             np.fill_diagonal(jaccard,1)
             jaccard = np.array([[np.sum(np.minimum(U[i,],U[j,]))/np.sum(np.maximum(U[i,],U[j,])) for j in range(N)] for i in range(N)])
             comp = np.mean(jaccard, axis = 0)
-            U_ac_total = np.append(U_ac_total, [comp*np.sum(U,axis=1)], axis = 0)
+            overlap = np.append(overlap, [comp], axis = 0)
+            # U_ac_total = np.append(U_ac_total, [comp*np.sum(U,axis=1)], axis = 0)
 
             # Richness
             rich = np.append(rich, len(np.where(rem_find)[0])) # Richness
@@ -172,7 +175,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
         
         rich_series = np.append(rich_series, [rich], axis = 0)
 
-    return result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out
+    return result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out, overlap
 
 # result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_CUE, lf, p_value, typ, K)
 # U_out = np.array([np.mean(U_out_total[N*i:N*(i+1)-1,:]) for i in range(tv*ass)])
