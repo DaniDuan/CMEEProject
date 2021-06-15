@@ -127,27 +127,27 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
             CUE_out = np.append(CUE_out, [CUE], axis = 0)
             Ea_CUE_out = np.append(Ea_CUE_out, [B_R*(Ea_U - Ea_R)/(B_U*(1 - lf) - B_R)], axis = 0)
 
-            # ### Invasion ###
+            ### Invasion ###
 
-            # rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
-            # x0 = np.concatenate((rem_find, pops[t_fin-1,N:N+M])) # Join new concentrations for consumers with those of resources
+            rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
+            x0 = np.concatenate((rem_find, pops[t_fin-1,N:N+M])) # Join new concentrations for consumers with those of resources
             
-            # # New Ea_ and Ea_R
-            # Ea_U[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
-            # Ea_R[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
-            # # Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
+            # New Ea_ and Ea_R
+            Ea_U[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
+            Ea_R[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
+            # Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
 
-            # # New Tpeak
-            # pk_U = np.random.normal(35, 5, size = len(rem_find[ext]))
-            # pk_R = pk_U + 3
-            # T_pk_R[ext] = 273.15 + pk_R
-            # T_pk_U[ext] = 273.15 + pk_U
+            # New Tpeak
+            pk_U = np.random.normal(35, 5, size = len(rem_find[ext]))
+            pk_R = pk_U + 3
+            T_pk_R[ext] = 273.15 + pk_R
+            T_pk_U[ext] = 273.15 + pk_U
 
-            # # New U&R
-            # U_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_R[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[0]
-            # U[ext] = U_new
-            # R_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[1]
-            # R[ext] = R_new
+            # New U&R
+            U_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_R[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[0]
+            U[ext] = U_new
+            R_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[1]
+            R[ext] = R_new
             
             ### Storing simulation results ###
             result_array = np.append(result_array, pops, axis=0)
