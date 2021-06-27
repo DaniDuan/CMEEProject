@@ -664,3 +664,29 @@ Ea_D = 3.5
 Tref = 273.15 + np.linspace(0,50,51) # Temperatures
 B_U = np.random.uniform(1, 3, N) * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref))) # U is always 2 at 0 degree
 B_R = np.random.uniform(0, 2, N) * np.exp((-0.67/k) * ((1/Tref)-(1/273.15)))/(1 + (0.67/(Ea_D - 0.67)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref))) 
+
+
+
+a = 1.4
+b = ((a - 1/3) / (0.5326/3)) + 2/3 - a
+# np.mean(np.random.beta(a, ((a - 1/3) / 0.67) + 2/3 - a, 5000))
+b
+plt.hist(np.random.beta(a, b, 50000)*3)
+plt.show()
+
+lam = np.log(2)/0.5326
+plt.hist(np.random.exponential(1/lam, 10000))
+plt.show()
+
+b = 1.4
+np.mean(np.random.beta(b, ((b - 1/3) / 0.1827) + 2/3 - b, 50000))
+
+
+def selection_sort(x):
+    for i in range(len(x)):
+        swap = i + np.argmin(x[i:])
+        (x[i], x[swap]) = (x[swap], x[i])
+    return x
+
+array = (B_U*0.6 - B_R)/B_U
+selection_sort(array)

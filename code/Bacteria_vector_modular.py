@@ -61,6 +61,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
     CUE_out = np.empty((0,N))
     Ea_CUE_out = np.empty((0,N))
     overlap = np.empty((0,N))
+    crossf = np.empty((0,N))
 
 
     for i in range(ass):
@@ -73,6 +74,10 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
         T_pk_U = 273.15 + np.random.normal(35, 5, size = N)
         T_pk_R = T_pk_U + 3
         a = 15
+        # b = 1.4
+        # B_U = np.random.beta(b, ((b - 1/3) / (0.5326/3)) + 2/3 - b, N)*3
+        # B0_CUE = np.random.beta(b, ((b - 1/3) / 0.1827) + 2/3 - b, N)
+        # B_R = B_U * (1 - lf) - B0_CUE * B_U
         Ea_U = np.random.beta(a, ((a - 1/3) / (0.82/4)) + 2/3 - a, N)*4
         Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, N)*4
         # Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
@@ -113,11 +118,19 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
             
             # Competition for resources
             jaccard = np.zeros((N,N)) # Niche overlap
-            np.fill_diagonal(jaccard,1)
+            # np.fill_diagonal(jaccard,1)
             jaccard = np.array([[np.sum(np.minimum(U[i,],U[j,]))/np.sum(np.maximum(U[i,],U[j,])) for j in range(N)] for i in range(N)])
             comp = np.mean(jaccard, axis = 0)
             overlap = np.append(overlap, [comp], axis = 0)
             # U_ac_total = np.append(U_ac_total, [comp*np.sum(U,axis=1)], axis = 0)
+
+
+            # Cross-feeding
+            cf = np.zeros((N,N))
+            leak = U@l
+            cf = np.array([[np.sum(np.minimum(leak[i], U[j]))/np.sum(np.maximum(leak[i], U[j])) for j in range(N)] for i in range(N)])
+            crossf = np.append(crossf, [np.mean(cf, axis = 0)], axis = 0)
+
 
             # Richness
             rich = np.append(rich, len(np.where(rem_find)[0])) # Richness
@@ -127,27 +140,28 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
             CUE_out = np.append(CUE_out, [CUE], axis = 0)
             Ea_CUE_out = np.append(Ea_CUE_out, [B_R*(Ea_U - Ea_R)/(B_U*(1 - lf) - B_R)], axis = 0)
 
-            ### Invasion ###
 
-            rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
-            x0 = np.concatenate((rem_find, pops[t_fin-1,N:N+M])) # Join new concentrations for consumers with those of resources
+            # ### Invasion ###
+
+            # rem_find = np.where(rem_find<0.01,0.1,rem_find) # Replace extinct consumers with a new concentration of 0.1
+            # x0 = np.concatenate((rem_find, pops[t_fin-1,N:N+M])) # Join new concentrations for consumers with those of resources
             
-            # New Ea_ and Ea_R
-            Ea_U[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
-            Ea_R[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
-            # Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
+            # # New Ea_ and Ea_R
+            # Ea_U[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
+            # Ea_R[ext] = np.random.beta(25, ((25 - 1/3) / 0.8) + 2/3 - 25, len(ext[0]))
+            # # Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
 
-            # New Tpeak
-            pk_U = np.random.normal(35, 5, size = len(rem_find[ext]))
-            pk_R = pk_U + 3
-            T_pk_R[ext] = 273.15 + pk_R
-            T_pk_U[ext] = 273.15 + pk_U
+            # # New Tpeak
+            # pk_U = np.random.normal(35, 5, size = len(rem_find[ext]))
+            # pk_R = pk_U + 3
+            # T_pk_R[ext] = 273.15 + pk_R
+            # T_pk_U[ext] = 273.15 + pk_U
 
-            # New U&R
-            U_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_R[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[0]
-            U[ext] = U_new
-            R_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[1]
-            R[ext] = R_new
+            # # New U&R
+            # U_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_R[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[0]
+            # U[ext] = U_new
+            # R_new = par.params(len(rem_find[ext]), M, T, k, Tref, T_pk_U[ext], B_U[ext], B_R[ext],Ma, Ea_U[ext], Ea_R[ext], Ea_D[ext], lf)[1]
+            # R[ext] = R_new
             
             ### Storing simulation results ###
             result_array = np.append(result_array, pops, axis=0)
@@ -175,9 +189,9 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K):
         
         rich_series = np.append(rich_series, [rich], axis = 0)
 
-    return result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out, overlap
+    return result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf
 
-# result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_CUE, lf, p_value, typ, K)
+# result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K)
 # U_out = np.array([np.mean(U_out_total[N*i:N*(i+1)-1,:]) for i in range(tv*ass)])
 # fig, ax1 = plt.subplots()
 # ax2 = ax1.twiny()

@@ -5,17 +5,15 @@ import numpy as np
 
 ########## Setting Parameters ###########
 N = 100 # Number of consumers
-M = 30 # Number of resources
+M = 50 # Number of resources
 
 # Temperature params
-Tref = 273.15 + 10 # Reference temperature Kelvin, 10 degrees C
+Tref = 273.15 + 0 # Reference temperature Kelvin, 10 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
-Ea_diff = 0.6
 Ea_CUE = 0.3
 lf = 0.4 # Leakage
 p_value = 1 # External input resource concentration
-
 
 # Assembly
 ass = 30 # Assembly number, i.e. how many times the system can assemble
@@ -27,7 +25,7 @@ K = 1 # Half saturation constant
 T_c = 6 # How many temperatures to cover (how many cycles to run)
 
 ############# Defining a Function for Running Model ##########
-def funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, Ea_D, Ea_diff, Ea_CUE, lf, p_value, typ, K): 
+def funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K): 
     '''
     Returning community richness at different temperatures.
     '''
@@ -42,7 +40,7 @@ def funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, Ea_D, Ea_diff, Ea_CUE, 
 
     for i in range(T_c):
         T = 273.15 + 5 * i # Temperature
-        result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, Ea_CUE, lf, p_value, typ, K)
+        result_array, rich_series, l, U_out_total, U_ac_total, R_out, CUE_out, Ea_CUE_out, overlap = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K)
         sur = [np.where(result_array[(i+1)*t_fin-1, 0:N]) for i in range(tv*ass)]
         CUE_sur = np.append(CUE_sur, [np.array([np.mean(CUE_out[i][sur[i]]) for i in range(len(sur))])], axis = 0)
         U = np.sum(U_out_total, axis = 1).reshape(tv*ass, N)
@@ -56,7 +54,7 @@ def funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, Ea_D, Ea_diff, Ea_CUE, 
         
     return CUE_sur, U_sur, R_sur, rich_out
 
-# CUE_sur, U_sur, R_sur, rich_out = funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, Ea_D, Ea_diff, U0, R0, lf, p_value, typ, K)
+CUE_sur, U_sur, R_sur, rich_out = funcs_with_temp(T_c, t_fin, N, M, Tref, Ma, ass, tv, Ea_D, lf, p_value, typ, K)
 
 # CUE_mean = np.nanmean(CUE_sur_out, axis = 1)
 # CUE_CI = 1.96 * np.nanstd(CUE_sur_out,axis = 1)/((CUE_sur_out.shape[1])**0.5)
@@ -90,8 +88,8 @@ def mean_ci(output_matrix, T_c, ass, tv):
 # plt.show()
 
 # T_plot = range(0, 5*T_c, 5)
-# plt.plot(T_plot, rich_temp_mean, 'b-', linewidth=0.7)
-# plt.fill_between(T_plot, rich_temp_mean - rich_temp_ci, rich_temp_mean + rich_temp_ci, color='b', alpha=.1)
+# plt.plot(T_plot, rich_mean, linewidth=0.7)
+# plt.fill_between(T_plot, rich_mean - rich_ci, rich_mean + rich_ci, alpha=.1)
 # plt.ylabel('Richness')
 # plt.xlabel('Temp')
 # plt.show()
