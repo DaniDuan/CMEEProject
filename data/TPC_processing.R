@@ -67,14 +67,18 @@ for(i in 1:nrow(grow_data)){
 }
 CUE(G = Schoolfield(Temp = 273.15:323.15, B0 = grow_data$B0[i], T_pk = grow_data$T_pk[i], Ea = grow_data$Ea[i], E_D = grow_data$E_D[i]), R = Schoolfield(Temp = 273.15:323.15, B0 = res_data$B0[i], T_pk = res_data$T_pk[i], Ea = res_data$Ea[i], E_D = res_data$E_D[i]))
 
-
-
+CUE_0 = grow_data$B0/(grow_data$B0+res_data$B0)
+hist(CUE_0)
+mean(CUE_0)
+mean(CUE_0) - sd(CUE_0)/sqrt(nrow(grow_data))
+mean(CUE_0) + sd(CUE_0)/sqrt(nrow(grow_data))
 
 ###### Biotrait Growth ######
 
 database = read.csv("./database.csv")
 database = database[which(database$StandardisedTraitName == "Specific Growth Rate"),]
 database[which(database$AmbientTemp > 150),]$AmbientTemp = database[which(database$AmbientTemp > 150),]$AmbientTemp - 273.15
+database = database[which(database$ConKingdom == 'Bacteria'),]
 scatter.smooth(database$AmbientTemp, database$StandardisedTraitValue, xlab ='Temperature', ylab = 'Growth rate')
 
 summ = read.csv("./summary.csv")
@@ -82,25 +86,28 @@ summ = summ[-which(summ$Points_Before_Peak < 3),]
 summ = summ[which(summ$Trait == "Specific Growth Rate"),]
 summ = summ[-which(summ$AIC > 100),]
 summ = summ[-which(summ$E_D < summ$E),]
+summ = summ[-which(summ$T_pk > 370),]
+summ = summ[-which(summ$E_D > 30),]
 summ = summ[which(summ$ConKingdom == 'Bacteria'),]
 #summ = summ[which(summ$B0>0),]
 s_data = data.frame(summ$X, summ$Species, summ$B0, summ$E, summ$T_pk, summ$E_D, summ$R_Squared, summ$AIC, summ$BIC)
 names(s_data) = c('ID', 'Species', 'B0', 'Ea', 'T_pk', 'E_D', 'r_sq', 'AIC', 'BIC')
 
-plot(1, type="n", xlab = "Temperature (celsius)", ylab = 'Growth Rate', xlim=c(0,100), ylim = c(0, 30))
+plot(1, type="n", xlab = "Temperature (celsius)", ylab = 'Growth Rate', xlim=c(0,100), ylim = c(0, 90))
 for(i in 1:nrow(s_data)){
-  lines(x = 0:100, y = Schoolfield(Temp = 273.15:373.15, B0 = s_data$B0[i], T_pk = s_data$T_pk[i], Ea = s_data$Ea[i], E_D = s_data$E_D[i]), typ = 'l')
+  lines(x = 0:100, y = Schoolfield(Temp = 273.15:373.15, B0 = exp(s_data$B0[i]), T_pk = s_data$T_pk[i], Ea = s_data$Ea[i], E_D = s_data$E_D[i]), typ = 'l')
 }
-plot(1, type="n", xlab = "Temperature (celsius)", ylab = 'Growth Rate', xlim=c(0,60), ylim = c(0, 30))
+plot(1, type="n", xlab = "Temperature (celsius)", ylab = 'Growth Rate (1/day)', xlim=c(0,60), ylim = c(0, 90))
 for(i in 1:nrow(s_data)){
-  lines(x = 0:60, y = Schoolfield(Temp = 273.15:333.15, B0 = s_data$B0[i], T_pk = s_data$T_pk[i], Ea = s_data$Ea[i], E_D = s_data$E_D[i]), typ = 'l')
+  lines(x = 0:60, y = Schoolfield(Temp = 273.15:333.15, B0 = exp(s_data$B0[i]), T_pk = s_data$T_pk[i], Ea = s_data$Ea[i], E_D = s_data$E_D[i]), typ = 'l')
 }
 
 
 plot(1, type="n", xlab = "Temperature (celsius)", ylab = 'ln(Growth Rate)', xlim=c(0, 100), ylim=c(-5, 3.5))
 for(i in 1:nrow(s_data)){
-  lines(logSchoolfield(Temp = 273.15:373.15, lnB0 = log(s_data$B0[i]), T_pk = s_data$T_pk[i], Ea = s_data$Ea[i], E_D = s_data$E_D[i]), typ = 'l')
+  lines(logSchoolfield(Temp = 273.15:373.15, lnB0 = exp(s_data$B0[i]), T_pk = s_data$T_pk[i], Ea = s_data$Ea[i], E_D = s_data$E_D[i]), typ = 'l')
 }
 
-hist(s_data[which(s_data$B0 > 0),]$B0)
-max(s_data[which(s_data$B0 > 0),]$B0)
+hist(exp(s_data$B0))
+max(exp(s_data$B0))
+median(exp(s_data$B0))

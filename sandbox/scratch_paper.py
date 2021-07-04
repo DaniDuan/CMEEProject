@@ -674,13 +674,21 @@ b
 plt.hist(np.random.beta(a, b, 50000)*3)
 plt.show()
 
-lam = np.log(2)/0.5326
+lam = np.log(2)/0.089 # median value 0.089
 plt.hist(np.random.exponential(1/lam, 10000))
 plt.show()
 
-b = 1.4
-np.mean(np.random.beta(b, ((b - 1/3) / 0.1827) + 2/3 - b, 50000))
+plt.hist(np.random.exponential(0.4810934, 10000))
+plt.show()
 
+lam = np.log(2)/0.1790591 # median value 0.089
+plt.hist(np.random.exponential(1/lam, 10000))
+plt.show()
+
+b = 1
+np.median(np.random.beta(b, ((b - 1/3) / 0.175) + 2/3 - b, 50000))
+plt.hist(np.random.beta(b, ((b - 1/3) / 0.175) + 2/3 - b, 50000))
+plt.show()
 
 def selection_sort(x):
     for i in range(len(x)):
@@ -690,3 +698,7 @@ def selection_sort(x):
 
 array = (B_U*0.6 - B_R)/B_U
 selection_sort(array)
+
+
+plt.hist(np.random.uniform(0.05230875, 0.3884611, 10000))
+plt.show()
