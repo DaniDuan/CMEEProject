@@ -99,9 +99,9 @@ for(i in 1:nrow(s_data)){
 }
 plot(1, type="n", xlab = "Temperature (celsius)", ylab = 'Growth Rate (1/day)', xlim=c(0,60), ylim = c(0, 90))
 for(i in 1:nrow(s_data)){
-  lines(x = 0:60, y = Schoolfield(Temp = 273.15:333.15, B0 = exp(s_data$B0[i]), T_pk = s_data$T_pk[i], Ea = s_data$Ea[i], E_D = s_data$E_D[i]), typ = 'l')
+  lines(x = 0:60, y = Schoolfield(Temp = 273.15:333.15, B0 = exp(s_data$B0[i]), T_pk = s_data$T_pk[i], Ea = s_data$Ea[i], E_D = s_data$E_D[i]), typ = 'l', col = alpha('black',0.5))
 }
-
+text(0,85, 'A', cex = 1.2)
 
 plot(1, type="n", xlab = "Temperature (celsius)", ylab = 'ln(Growth Rate)', xlim=c(0, 100), ylim=c(-5, 3.5))
 for(i in 1:nrow(s_data)){
@@ -110,4 +110,4 @@ for(i in 1:nrow(s_data)){
 
 hist(exp(s_data$B0))
 max(exp(s_data$B0))
-median(exp(s_data$B0))
+mean(exp(s_data$B0))

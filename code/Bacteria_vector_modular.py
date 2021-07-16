@@ -16,11 +16,11 @@ import random
 
 ######## Set up parameters ###########
 
-N = 100 # Number of consumers
-M = 50 # Number of resources
+N = 10 # Number of consumers
+M = 5 # Number of resources
 
 # Temperature params
-T = 273.15 + 0 # Temperature
+T = 273.15 + 25 # Temperature
 Tref = 273.15 + 0 # Reference temperature Kelvin, 10 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
@@ -29,15 +29,19 @@ lf = 0.4 # Leakage
 p_value = 1 # External input resource concentration
 
 # Assembly
-ass = 30 # Assembly number, i.e. how many times the system can assemble
-t_fin = 3000 # Number of time steps
-typ = 1 # Functional response, Type I or II
-K = 1 # Half saturation constant
+ass = 1 # Assembly number, i.e. how many times the system can assemble
+t_fin = 30 # Number of time steps
+typ = 2 # Functional response, Type I or II
+K = 5 # Half saturation constant
+
+# Invasion
+inv = True
+sp = 7 # number of invading species
 
 
 ##### Intergrate system forward #####
 
-def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
+def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K, inv, sp):
     '''
     Main function for the simulation of resource uptake and growth of microbial communities.
     '''
@@ -45,10 +49,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
     # Setted Parameters
     k = 0.0000862 # Boltzman constant
     a = 15 # The alpha value for beta distribution in Ea
-    B_U = 2
-    B_R = 1
-    # B_U = 0.48 # mean = 0.4810934, N = 377
-    # B_R = 0.18 # mean_CUE0 = 0.2203849, SE = 0.04119449, N = 26
+    B_R = 1.70 # Using CUE0 = 0.22, mean growth rate = 0.48
+    B_U = 4.47 # CUE0 = 0.22
 
 
     ### Creating empty array for storing data ###
@@ -61,7 +63,9 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
     Ea_CUE_out = np.empty((0,N))
     overlap = np.empty((0,N))
     crossf = np.empty((0,N))
-
+    invasion_result = np.empty((0,N+sp+M)) 
+    inv_U = np.empty((0,M))
+    inv_R = np.empty((0,sp))
 
     for i in range(ass):
 
@@ -72,9 +76,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
         # Set up Ea (activation energy) and B0 (normalisation constant) based on Tom Smith's observations
         T_pk_U = 273.15 + np.random.normal(35, 5, size = N)
         T_pk_R = T_pk_U + 3
-        # B_U = np.random.exponential(0.48, N) # mean = 0.4810934, N = 377
-        # CUE_0 = np.random.uniform(0.18, 0.26, N) # mean = 0.2203849, SE = 0.04119449, N = 26
-        # B_R = B_U * (1 - lf) - CUE_0 * B_U
         Ea_U = np.random.beta(a, ((a - 1/3) / (0.82/4)) + 2/3 - a, N)*4
         Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, N)*4
         # Ea_R = Ea_U - Ea_CUE * (B_U * (1 - lf) - B_R) / B_R
@@ -93,7 +94,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
 
         pops = odeint(mod.metabolic_model, y0=x0, t=t, args = pars) # Integrate
         pops = np.round(pops, 7)
-
 
         ### Storing simulation results ###
         result_array = np.append(result_array, pops, axis=0)
@@ -127,20 +127,32 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
         Ea_CUE_out = np.append(Ea_CUE_out, [B_R*(Ea_U - Ea_R)/(B_U*(1 - lf) - B_R)], axis = 0)
 
 
-        ### Previous code for calculating simulated CUE ###
+        # Invasion
+        if inv == True:
+            x0 = np.concatenate((pops[t_fin - 1, 0:N], np.repeat(0.1, sp), pops[t_fin-1, N:N+M]))
 
-        # # CUE
-        # dCdt = pops[:,0:N] * ((1 - l_sum) * pops[:,N:N+M] @ U.transpose() - R)
-        # CUE = dCdt / (pops[:,0:N] * (pops[:,N:N+M] @ U.transpose())) # CUE of single species
-        # # CUE = C / np.einsum('ij,kj->ik', xr, U)
-        # CUE_out = np.append(CUE_out,np.round(CUE, 5), axis = 0)
+            T_pk_U = 273.15 + np.random.normal(35, 5, size = sp)
+            T_pk_R = T_pk_U + 3
+            Ea_U = np.random.beta(a, ((a - 1/3) / (0.82/4)) + 2/3 - a, sp)*4
+            Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, sp)*4
+            Ea_D = np.repeat(3.5,sp)
 
-        # # Community CUE
-        # for a in range(len(pops)):
-        #     dCdt_com = np.sum(np.nan_to_num(dCdt[a,:]/xc[a,:], nan=0))
-        #     U_com = np.sum(xr[a,:]*U[np.where(pops[a,0:N] >= 0.01)]) # Community level uptake
-        #     R_com = np.sum(R[np.where(pops[a,0:N] >= 0.01)]) # Community level respiration
-        #     CUE_com = dCdt_com/U_com # Community level CUE
-        #     CUE_com_out = np.append(CUE_com_out, np.round(CUE_com, 5))
+            U_new = par.params(sp, M, T, k, Tref, T_pk_U, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf)[0] # Uptake
+            CUE_new = np.max(CUE)+ np.random.normal(0.001, 0.0001, sp)
+            R_new = U_new @ (1 - l_sum) - CUE_new*(np.sum(U_new, axis = 1))
 
-    return result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf
+            U = np.append(U, U_new, axis = 0)
+            R = np.append(R, R_new)
+
+            pars = (U, R, l, p, l_sum, N+sp, M, typ, K) # Parameters to pass onto model
+            pops = odeint(mod.metabolic_model, y0=x0, t=t, args = pars) # Integrate
+            pops = np.round(pops, 7)
+
+            invasion_result = np.append(invasion_result, pops, axis=0)
+            inv_U = np.append(inv_U, U_new, axis = 0)
+            inv_R = np.append(inv_R, [R_new], axis = 0)
+
+
+    return result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, invasion_result, inv_U, inv_R
+
+result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, invasion_result, inv_U, inv_R = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K, inv, sp)

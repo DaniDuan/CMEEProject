@@ -702,3 +702,16 @@ selection_sort(array)
 
 plt.hist(np.random.uniform(0.05230875, 0.3884611, 10000))
 plt.show()
+
+
+K = 1
+x = np.arange(0, 2, 0.1)
+plt.plot(x, 4.47*x/(K+x))
+plt.plot(x, 4.47*x)
+plt.show()
+
+
+for i in range(6):
+    K = 2**(i - 3)
+    print(K)
+
