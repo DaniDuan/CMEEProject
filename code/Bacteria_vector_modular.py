@@ -20,7 +20,7 @@ N = 10 # Number of consumers
 M = 5 # Number of resources
 
 # Temperature params
-T = 273.15 + 25 # Temperature
+T = 273.15 + 0 # Temperature
 Tref = 273.15 + 0 # Reference temperature Kelvin, 10 degrees C
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
@@ -29,13 +29,13 @@ lf = 0.4 # Leakage
 p_value = 1 # External input resource concentration
 
 # Assembly
-ass = 1 # Assembly number, i.e. how many times the system can assemble
-t_fin = 30 # Number of time steps
+ass = 30 # Assembly number, i.e. how many times the system can assemble
+t_fin = 2 # Number of time steps
 typ = 2 # Functional response, Type I or II
 K = 5 # Half saturation constant
 
 # Invasion
-inv = True
+inv = False
 sp = 7 # number of invading species
 
 

@@ -715,3 +715,18 @@ for i in range(6):
     K = 2**(i - 3)
     print(K)
 
+
+
+B = np.diag(x[N:N+M])
+
+1.96 * np.std(np.sum(U_out_total, axis = 1))/((ass*N)**0.5)
+
+fig, ax1 = plt.subplots()
+ax2 = ax1.twinx()
+for i in range(6):
+    T = 273.15 + 5*i
+    result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, invasion_result, inv_U, inv_R = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K, inv, sp)
+    y = 1 - np.mean(R_out)/np.mean(np.sum(U_out_total, axis = 1))
+    ax1.scatter(i*5,y)
+    ax2.scatter(i*5, np.mean(CUE_out),color = "red")
+plt.show()
