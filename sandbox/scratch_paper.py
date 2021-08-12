@@ -17,9 +17,13 @@ plt.barh(range(20), s[0])
 plt.barh(range(20), s[1], left=s[0], color='g')
 plt.barh(range(20), s[2], left=s[0]+s[1], color='r')
 
-f1 = np.random.dirichlet((100,1), 1000) 
-plt.hist(f1, 30, density = True) 
+f1 = np.random.dirichlet(np.full(10,1), 100000) 
+plt.hist(plt.hist(f1, 30, density = True)[0])
 plt.show()
+
+plt.hist(np.random.beta(1, 1, 50000)*4, 30, density = True)
+plt.show()
+
 w = np.random.dirichlet(np.ones(M),N)
 
 A = np.transpose(np.array([[1,2,3],[3,4,5],[5,6,7],[10,20,30]]))
@@ -85,9 +89,10 @@ B_U = (10**(2.84 + (-4.96 * Ea_U))) + 4 # B0 for uptake - ** NB The '+4' term is
 B_R = (10**(1.29 + (-1.25 * Ea_R))) # B0 for respiration
 
 U_sum = st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D)
-np.random.seed(0)
-diri = np.transpose(np.random.dirichlet(np.ones(M),N))
+# np.random.seed(0)
+diri = np.transpose(np.random.dirichlet(np.full(M,1/M),N))
 U = np.transpose(diri*U_sum)
+np.round(U)
 print(U_sum)
 print(U)
 
@@ -730,3 +735,59 @@ for i in range(6):
     ax1.scatter(i*5,y)
     ax2.scatter(i*5, np.mean(CUE_out),color = "red")
 plt.show()
+
+
+U = R/(1 - lf - CUE_0)
+
+np.var(np.array((0,101,1)))
+
+im = plt.imshow(cf, cmap = 'binary')
+ax = plt.gca()
+ax.set_xticks(np.arange(-.5,5,1), minor = True)
+ax.set_yticks(np.arange(-.5,5,1), minor = True)
+plt.xticks([])
+plt.yticks([])
+ax.grid(which = 'minor', color = 'k', linestyle='-', linewidth=1)
+plt.title( "" )
+plt.grid()
+plt.show()
+
+im = plt.imshow(jaccard, cmap = 'binary')
+ax = plt.gca()
+ax.set_xticks(np.arange(-.5,5,1), minor = True)
+ax.set_yticks(np.arange(-.5,5,1), minor = True)
+plt.xticks([])
+plt.yticks([])
+ax.grid(which = 'minor', color = 'k', linestyle='-', linewidth=1)
+plt.title( "" )
+plt.grid()
+plt.show()
+
+while np.any(infodict.get('nfe')< 0):
+    print(1)
+
+n = 0
+while n<2:
+    n = n+1
+print(n)
+
+np.any(infodict.get('tolsf')<0)
+
+for i in range(5):
+    if i == 0:
+        l = 0
+    else:
+        l = i*0.2-0.1
+    print(l)
+
+
+U_s = U_out_total[(ass-1)*N-1:ass*N-1,:][sur[ass-1]]
+R_s = R_out[ass-1][sur[ass-1]]
+CUE_s = CUE_out[ass-1][sur[ass-1]]
+l
+l_sum = np.sum(l, axis=1)
+t = np.linspace(0,t_fin-1,t_fin) 
+for i in range(rich_series[ass-1]):
+    pars = (U_s[i,:], R_s[i], l, p, l_sum, 1, M, typ, K) # Parameters to pass onto model
+    pops, infodict = odeint(mod.metabolic_model, y0=x0, t=t, args = pars, full_output=1) # Integrate
+

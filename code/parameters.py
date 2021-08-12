@@ -4,18 +4,21 @@ import numpy as np
 import size_temp_funcs as st
 
 # Parameters
-def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf):
+def params(N, M, T, k, Tref, T_pk_U, T_pk_R, B_U, B_R, Ma, Ea_U, Ea_R, Ea_D, lf):
     '''
     Returning matrices and vectors of uptake, respiration and excretion.
     '''
     # Uptake
     # Give random uptake for each resources, sum up to the total uptake of the bacteria
-    U_sum = st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D)
-    diri = np.transpose(np.random.dirichlet(np.ones(M),N))
+    U_sum = st.temp_growth(k, T, Tref, T_pk_U, N, B_U, Ma, Ea_U, Ea_D)
+    diri = np.transpose(np.random.dirichlet(np.full(M,1),N))
     U = np.transpose(diri*U_sum)
 
+    # jaccard = np.array([[np.sum(np.minimum(U[i,],U[j,]))/np.sum(np.maximum(U[i,],U[j,])) for j in range(N)] for i in range(N)])
+    # np.mean(np.mean(jaccard, axis = 0))
+
     # Respiration
-    R = st.temp_resp(k, T, Tref,T_pk, N, B_R, Ma, Ea_R, Ea_D) # find how varies with temperature (ar = arrhenius)
+    R = st.temp_resp(k, T, Tref,T_pk_R, N, B_R, Ma, Ea_R, Ea_D) # find how varies with temperature (ar = arrhenius)
 
     # Excretion
     # SUMMING UP TO 0.4  
@@ -23,3 +26,5 @@ def params(N, M, T, k, Tref, T_pk, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf):
     l = [[l_raw[j,i] if j>=i else 0 for j in range(M)] for i in range(M)]
 
     return U, R, l
+
+
