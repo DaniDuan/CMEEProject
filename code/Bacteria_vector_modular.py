@@ -20,7 +20,7 @@ N = 100 # Number of consumers
 M = 50 # Number of resources
 
 # Temperature params
-T = 273.15 + 0 # Temperature
+T = 273.15 + 25 # Temperature
 Tref = 273.15 + 0 # Reference temperature Kelvin
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
@@ -78,6 +78,9 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
         U, R, l = par.params(N, M, T, k, Tref, T_pk_U, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf) # Uptake
         l_sum = np.sum(l, axis=1)
         
+        # With cost
+        R_cost = R*(1-lf)*np.sum(U/np.sum(U), axis = 1)*150
+
         # Integration
         t = np.linspace(0,t_fin-1,t_fin) 
         # pars = (U, R, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
@@ -134,3 +137,31 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
     return result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr
 
 # result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K)
+
+
+
+# rich = np.array([len(np.where(result_array[i,0:N])[0]) for i in range(len(result_array))]).reshape(ass,t_fin)
+# rich_mean = np.mean(rich, axis = 0)
+# rich_ci = 1.96 * np.std(rich,axis = 0)/(ass**0.5)
+
+# t_plot = np.linspace(0,t_fin,t_fin)
+
+# plt.plot(t_plot, rich_mean)
+# plt.fill_between(t_plot, rich_mean - rich_ci, rich_mean + rich_ci, color = 'b', alpha=.1)
+# plt.ylabel('Richness')
+# plt.xlabel('Time')
+# plt.show()
+
+
+# t_plot = np.linspace(0,t_fin,t_fin)
+
+# plt.plot(t_plot, result_array[:,N:N+M], 'b-', linewidth=0.7)
+# plt.ylabel('Resources')
+# plt.xlabel('Time')
+# # plt.title('Consumer-Resource population dynamics')
+# plt.show()
+
+# plt.plot(t_plot, result_array[:,0:N], 'g-', linewidth=0.7)
+# plt.ylabel('Consumers')
+# plt.xlabel('Time')
+# plt.show()

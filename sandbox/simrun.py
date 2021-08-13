@@ -10,7 +10,7 @@ N = 100 # Number of consumers
 M = 50 # Number of resources
 
 # Temperature params
-Tref = 273.15 + 15 # Reference temperature Kelvin, 10 degrees C !!!
+Tref = 273.15 + 0 # Reference temperature Kelvin, 10 degrees C !!!
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy
 lf = 0.4 # Leakage
@@ -21,7 +21,7 @@ ass = 30 # Assembly times at each temperature
 t_fin = 4000 # Number of time steps for each temperature
 typ = 1 # Functional response, Type I or II
 K = 0.5 # Half saturation constant for Monod equation(Type II)
-T_c = 31 # How many temperatures to cover (how many cycles to run)
+T_c = 7 # How many temperatures to cover (how many cycles to run)
 
 
 rich = np.empty((0, ass))
@@ -50,8 +50,8 @@ ext_crossf = []
 
 
 for i in range(T_c):
-    T = 273.15 + i # Temperature
-    result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K)
+    T = 273.15 + 5*i # Temperature
+    result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K)
     rich = np.append(rich, [rich_series.flatten()], axis = 0)
     
     sur = [np.where(result_array[(i+1)*t_fin-1, 0:N]) for i in range(ass)]
@@ -160,7 +160,7 @@ for i in range(len(Ea_sorted)):
     
 
 
-T_plot = range(0, T_c, 1)
+T_plot = range(0, 5*T_c, 5)
 T_sur = [[np.repeat(T_plot[i], rich[i][j]) for j in range(ass)] for i in range(T_c)]
 
 plt.plot(T_plot, rich_mean)
