@@ -33,6 +33,7 @@ ass = 30 # Assembly number, i.e. how many times the system can assemble
 t_fin = 4000 # Number of time steps
 typ = 1 # Functional response, Type I or II
 K = 5 # Half saturation constant
+# strc = 1
 
 ##### Intergrate system forward #####
 
@@ -83,8 +84,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
 
         # Integration
         t = np.linspace(0,t_fin-1,t_fin) 
-        # pars = (U, R, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
-        pars = (U, R_cost, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
+        pars = (U, R, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
+        # pars = (U, R_cost, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
 
         pops, infodict = odeint(mod.metabolic_model, y0=x0, t=t, args = pars, full_output=1) # Integrate
         while np.any(infodict.get('nfe')> 10000):
@@ -94,8 +95,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
             Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, N)*4
             U, R, l = par.params(N, M, T, k, Tref, T_pk_U, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf) # Uptake
             l_sum = np.sum(l, axis=1)
-            # pars = (U, R, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
-            pars = (U, R_cost, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
+            pars = (U, R, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
+            # pars = (U, R_cost, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
             pops, infodict = odeint(mod.metabolic_model, y0=x0, t=t, args = pars, full_output=1)
 
         pops = np.round(pops, 7)
@@ -117,7 +118,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
         # Cross-feeding
         leak = U@l
         cf = np.array([[np.sum(np.minimum(leak[i], U[j]))/np.sum(np.maximum(leak[i], U[j])) for j in range(N)] for i in range(N)])
-        np.fill_diagonal(cf, np.nan)
+        # np.fill_diagonal(cf, np.nan)
         crossf = np.append(crossf, [np.nanmean(cf, axis = 1)], axis = 0)
 
 

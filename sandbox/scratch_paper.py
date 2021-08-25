@@ -791,3 +791,24 @@ for i in range(rich_series[ass-1]):
     pars = (U_s[i,:], R_s[i], l, p, l_sum, 1, M, typ, K) # Parameters to pass onto model
     pops, infodict = odeint(mod.metabolic_model, y0=x0, t=t, args = pars, full_output=1) # Integrate
 
+
+np.mean([np.abs(Sr[i,:] - np.mean(Sr,axis=1)[i]) for i in range (ass)], axis = 1)
+
+np.mean((1 - overlap)/(N-1), axis = 1)
+
+N = 2
+M = 1
+ass = 1
+T = 273.15 + 25
+result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K)
+
+plt.plot(t_plot, result_array[:,N:N+M], 'b-', linewidth=0.7)
+plt.plot(t_plot, result_array[:,0:N], 'g-', linewidth=0.7)
+plt.ylabel('Consumer & Resource concentration')
+plt.xlabel('Time')
+plt.legend([Line2D([0], [0], color='green', lw=2), Line2D([0], [0], color='blue', lw=2)], ['Consumers', 'Resources'])
+# plt.title('Consumer-Resource population dynamics')
+plt.show()
+
+
+rich = temp_rich.get('rich')
