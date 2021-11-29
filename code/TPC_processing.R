@@ -28,7 +28,7 @@ names(res_data) = c('Ea', 'B0', 'E_D', 'T_pk', 'P_pk','r_sq')
 grow_data = data.frame(data$E_growth, data$B0_growth, data$E_D_growth, data$Tpk_growth, data$Ppk_growth, data$r_sq_growth)
 names(grow_data) = c('Ea', 'B0', 'E_D', 'T_pk', 'P_pk','r_sq')
 
-###### Growth ######
+##### Growth ######
 plot(1, type="n", xlab = "Temperature(celsius)", ylab = 'growth rate', xlim=c(0, 50), ylim = c(0, 0.8))
 for(i in 1:nrow(grow_data)){
   lines(Schoolfield(Temp = 273.15:323.15, B0 = grow_data$B0[i], T_pk = grow_data$T_pk[i], Ea = grow_data$Ea[i], E_D = grow_data$E_D[i]), typ = 'l')

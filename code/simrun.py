@@ -14,7 +14,7 @@ M = 50 # Number of resources
 Tref = 273.15 + 0 # Reference temperature Kelvin
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy
-lf = 0.7 # Leakage
+lf = 0.4 # Leakage
 p_value = 1 # External input resource concentration
 
 # Assembly
@@ -192,19 +192,26 @@ T_plot = range(0, T_c, 1)
 T_sur = [[np.repeat(T_plot[i], rich[i][j]) for j in range(ass)] for i in range(T_c)]
 
 
+plt.rcParams["figure.figsize"] = (15,9)
+# # plt.rcParams["figure.figsize"] = plt.rcParamsDefault["figure.figsize"]
+# plt.rcParams.update({'font.size': 25})
+# plt.rc('xtick', labelsize=25) 
+# plt.rc('ytick', labelsize=25) 
+# # plt.rcParams.update(mpl.rcParamsDefault)
+
 plt.rcParams["figure.figsize"] = (12,9)
 # plt.rcParams["figure.figsize"] = plt.rcParamsDefault["figure.figsize"]
-plt.rcParams.update({'font.size': 25})
-plt.rc('xtick', labelsize=25) 
-plt.rc('ytick', labelsize=25) 
+plt.rcParams.update({'font.size': 30})
+plt.rc('xtick', labelsize=30) 
+plt.rc('ytick', labelsize=30) 
 # plt.rcParams.update(mpl.rcParamsDefault)
 
 plt.plot(T_plot, rich_mean, 'b')
 plt.fill_between(T_plot, rich_mean - rich_ci, rich_mean + rich_ci, color = 'b', alpha=0.1)
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('Richness')
-plt.text(-5,25,'A',fontsize= 'x-large')
-plt.savefig('../data/selectingEaCUE.png')
+# plt.text(-5,25,'A',fontsize= 'x-large')
+# plt.savefig('../../pre/selectingEaCUE.png')
 plt. show()
 
 fig, ax1 = plt.subplots()
@@ -218,13 +225,13 @@ ax2.fill_between(T_plot, sR_mean - sR_ci, sR_mean + sR_ci, color='g', alpha=.1)
 ln4 = ax2.plot(T_plot, eR_mean, 'darkseagreen', label = "Extinct Respiration Rate", alpha=.5)
 ax2.fill_between(T_plot, eR_mean - eR_ci, eR_mean + eR_ci, color='darkseagreen', alpha=.1)
 ax1.set_xlabel('Temperature ($^\circ$C)')
-ax1.set_ylabel('Uptake rate')
-ax2.set_ylabel('Repiration Rate')
+ax1.set_ylabel('Uptake Rate (1/Time)')
+ax2.set_ylabel('Repiration Rate (Mass/Volume*Time)')
 lns = ln1+ln2+ln3+ln4
 ax1.legend(lns, [i.get_label() for i in lns], loc = 2)
 # text(-5,400,'B',fontsize= 'x-large')
-ax1.text(-5,890,'A',fontsize= 'x-large')
-plt.savefig('../data/selectingEaCUE_1.png')
+# ax1.text(-5,890,'A',fontsize= 'x-large')
+# plt.savefig('../../pre/selectingEaCUE_1.png')
 plt. show()
 
 plt.plot(T_plot, CUE_mean, 'r', label = "Survivor")
@@ -234,8 +241,8 @@ plt.fill_between(T_plot,  CUE_ext_mean - CUE_ext_ci,  CUE_ext_mean + CUE_ext_ci,
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('CUE')
 plt.legend()
-plt.text(-5,0.62,'B',fontsize= 'x-large')
-plt.savefig('../data/selectingEaCUE_2.png')
+# plt.text(-5,0.62,'B',fontsize= 'x-large')
+# plt.savefig('../../pre/selectingEaCUE_2.png')
 plt. show()
 
 
@@ -248,16 +255,16 @@ for i in range(T_c):
     else:
         plt.scatter(sur_Ea[i], np.concatenate(rich_sur[i]), color = 'b', alpha = 0.5, s = 50)
 m, b = np.polyfit(np.delete(meanEa,np.where(np.isnan(meanEa))), np.delete(rich_v,np.where(np.isnan(meanEa))), 1)
-x = np.arange(0.17, 1.41, 0.01)
+# x = np.arange(0.13, 1.5, 0.01)
 m, b, r_value, p_value, std_err = sc.stats.linregress(meanEa, rich_v)
 print(r_value**2)
 plt.plot(x, m*x + b, color = 'k',linewidth=3.5)
-plt.text(1.75, 16, '$R^2 = $%s' %np.round(r_value**2, 3))
-plt.xlabel('Thermal Sensitivity(Ea) of CUE')
+plt.text(1.48, 17, '$R^2 = $%s' %np.round(r_value**2, 3), fontsize = 22)
+plt.xlabel('Thermal Sensitivity of CUE')
 plt.ylabel('Richness')
-plt.legend(loc = 1)
-plt.text(-2,30,'B',fontsize= 'x-large')
-plt.savefig('../data/EaCUE_richness.png')
+plt.legend(loc = 3)
+# plt.text(-2,30,'B',fontsize= 'x-large')
+# plt.savefig('../../pre/EaCUE_richness.png')
 plt.show()
 
 
@@ -271,9 +278,10 @@ plt.fill_between(T_plot, crossf_sur_mean - crossf_sur_ci, crossf_sur_mean + cros
 plt.fill_between(T_plot, crossf_ext_mean - crossf_ext_ci, crossf_ext_mean + crossf_ext_ci, color = 'rosybrown', alpha=.1)
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('Pair-wise Interactions')
-plt.legend()
-plt.text(-5,0.375,'A',fontsize= 'x-large')
-plt.savefig('../data/Resource_overlap.png')
+plt.legend(fontsize = 'x-small', framealpha = 0.4)
+plt.tight_layout()
+# plt.text(-5,0.375,'A',fontsize= 'x-large')
+# plt.savefig('../../pre/Resource_overlap.png')
 plt.show()
 
 
@@ -288,15 +296,16 @@ plt.legend()
 plt.show()
 print(sur_var)
 
-plt.plot(T_plot, U_var_mean,'darkorange', label = "Survivor",linewidth=2.5)
-plt.fill_between(T_plot, U_var_mean - U_var_ci, U_var_mean + U_var_ci, color='darkorange', alpha=.2)
-plt.plot(T_plot, extU_var_mean,'grey', label = "Extinct")
-plt.fill_between(T_plot, extU_var_mean - extU_var_ci, extU_var_mean + extU_var_ci, color='grey', alpha=.2)
+plt.plot(T_plot, np.log(U_var_mean),'darkorange', label = "Survivor",linewidth=2.5)
+plt.fill_between(T_plot, np.log(U_var_mean-U_var_ci), np.log(U_var_mean+U_var_ci), color='darkorange', alpha=.2)
+plt.plot(T_plot, np.log(extU_var_mean),'grey', label = "Extinct")
+plt.fill_between(T_plot, np.log(extU_var_mean-extU_var_ci), np.log(extU_var_mean+extU_var_ci), color='grey', alpha=.2)
 plt.xlabel('Temperature ($^\circ$C)')
-plt.ylabel('Variance of Uptake')
-plt.legend(loc = 2)
-plt.text(-5,500,'B',fontsize= 'x-large')
-plt.savefig('../data/VarU.png')
+plt.ylabel('Variance of Uptake (log)')
+plt.legend(loc = 2,fontsize = 'x-small')
+plt.tight_layout()
+# plt.text(-5,500,'B',fontsize= 'x-large')
+# plt.savefig('../../pre/Figures/VarU.png')
 plt.show()
 
 plt.scatter(Sr_mean, rich_mean, s=20, color = 'k', alpha = 0.7)
@@ -317,7 +326,7 @@ plt.fill_between(T_plot, eq_mean - eq_ci, eq_mean + eq_ci, color='r', alpha=.1)
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('|Survivor $S_i^* - \overline{S^*}$|')
 # plt.legend()
-plt.savefig('../data/eq_st.png')
+# plt.savefig('../../pre/eq_st.png')
 plt.show()
 
 dEa_mean = np.nanmean(dEa_sur, axis = 1)
@@ -368,8 +377,8 @@ plt.errorbar(surEa_mean, Sr_mean, xerr=surEa_ci, fmt=',', color = 'k', alpha = 0
 plt.errorbar(surEa_mean, Sr_mean, yerr=Sr_ci, fmt=',', color = 'k', alpha = 0.3)
 plt.xlabel('Average survivor $E_{a_{CUE}}$')
 plt.ylabel('Average survivor $S^*$')
-plt.text(0.07,0.7,'A',fontsize= 'x-large')
-plt.savefig('../data/Eadiff_fitdiff.png')
+# plt.text(0.07,0.7,'A',fontsize= 'x-large')
+# plt.savefig('../../pre/Figures/Eadiff_fitdiff.png')
 plt.show()
 
 ########################################################################################################
@@ -719,11 +728,11 @@ rich_ci_1 = 1.96 * np.std(rich_1,axis = 0)/(ass**0.5)
 t_plot = np.linspace(0,t_fin,t_fin)
 
 plt.plot(t_plot, rich_mean_1)
-plt.fill_between(t_plot, rich_mean_1 - rich_ci_1, rich_mean_1 + rich_ci_1, color = 'b', alpha=.1)
+plt.fill_between(t_plot, rich_mean_1 - rich_ci_1, rich_mean_1 + rich_ci_1, color = 'b', alpha=.2)
 plt.ylabel('Richness')
 plt.xlabel('Time')
-plt.text(-700,110,'B',fontsize= 'x-large')
-plt.savefig('../data/rich_decay.png')
+# plt.text(-700,110,'B',fontsize= 'x-large')
+plt.savefig('../../pre/Figures/rich_decay.png')
 plt.show()
 
 
@@ -839,18 +848,18 @@ print((time.time() - start)/60)
 t_plot = np.linspace(0,t_fin,t_fin)
 
 plt.plot(t_plot, result_array[:,N:N+M], 'b-', linewidth=1)
-plt.ylabel('Resources concentration (Mass/Volume)')
+plt.ylabel('Resources concentration')
 plt.xlabel('Time')
 # plt.title('Consumer-Resource population dynamics')
-plt.text(-150,3.2,'A',fontsize= 'x-large')
-plt.savefig('../data/resource_con_example.png')
+# plt.text(-150,3.2,'A',fontsize= 'x-large')
+plt.savefig('../../pre/resource_con_example.png')
 plt.show()
 
 plt.plot(t_plot, result_array[:,0:N], 'g-', linewidth=1)
-plt.ylabel('Consumer biomass (Mass/Volume)')
+plt.ylabel('Consumer biomass')
 plt.xlabel('Time')
-plt.text(-150, 4.2,'B',fontsize= 'x-large')
-plt.savefig('../data/consumer_con_example.png')
+# plt.text(-150, 4.2,'B',fontsize= 'x-large')
+plt.savefig('../../pre/consumer_con_example.png')
 plt.show()
 
 ###########################################################################################
@@ -928,21 +937,28 @@ for i in range(N):
     U_Sharpe = B_U * np.exp((-Ea_U[i]/k) * ((1/T)-(1/Tref)))/(1 + (Ea_U[i]/(Ea_D - Ea_U[i])) * np.exp(Ea_D/k * (1/T_pk_U[i] - 1/T))) 
     plt.plot(T - 273.15, U_Sharpe, color = 'darkorange')
 
+plt.annotate(s='', xy=(30,1500), xytext=(0,1500), arrowprops=dict(arrowstyle='<->',facecolor='black', lw=2))
+plt.axvline(x = 30, c = 'k', ls = '--')
+plt.text(10,1350,'OTR')
 plt.xlabel('Temperature ($^\circ$C)') 
-plt.ylabel('Uptake Rate (1/Time)')
-plt.text(-12,1650,'B',fontsize= 'x-large')
-plt.savefig('../data/simulated_uptake_rate.png')
+plt.ylabel('Uptake Rate')
+# plt.text(-12,1650,'B',fontsize= 'x-large')
+plt.savefig('../../pre/simulated_uptake_rate.png')
 plt.show()
 
 for i in range(N):
     R_Sharpe = B_R * np.exp((-Ea_R[i]/k) * ((1/T)-(1/Tref)))/(1 + (Ea_R[i]/(Ea_D - Ea_R[i])) * np.exp(Ea_D/k * (1/T_pk_R[i] - 1/T))) 
     plt.plot(T - 273.15, R_Sharpe, 'darkgreen')
 
+plt.annotate(s='', xy=(30,400), xytext=(0,400), arrowprops=dict(arrowstyle='<->',facecolor='black', lw=2))
+plt.axvline(x = 30, c = 'k', ls = '--')
+plt.text(10,360,'OTR')
 plt.xlabel('Temperature ($^\circ$C)') 
-plt.ylabel('Repiration Rate (Mass/Volume*Time)')
-plt.text(-12,460,'C',fontsize= 'x-large')
-plt.savefig('../data/simulated_res_rate.png')
+plt.ylabel('Repiration Rate')
+# plt.text(-12,460,'C',fontsize= 'x-large')
+plt.savefig('../../pre/simulated_res_rate.png')
 plt.show()
+
 
 ##################################################################################################
 import numpy as np
@@ -1039,3 +1055,44 @@ plt.legend()
 plt.show()
     
 print((time.time() - start)/60)
+
+
+##################################################################################################################
+import numpy as np
+import matplotlib.pyplot as plt
+
+k = 0.0000862 # Boltzman constant
+Tref = 273.15 + 0 # Reference temperature Kelvin, 0 degrees C
+lf = 0.4
+T = 273.15 + np.linspace(0,30,100) # Temperatures
+T_pk_U = 273.15 + 35
+T_pk_R = T_pk_U + 3
+
+Ea_D = 3.5 # Deactivation energy
+Ea_CUE = 0.3
+B0_CUE = 0.1 * np.exp((-Ea_CUE/k) * ((1/Tref)-(1/273.15)))
+B_U = 4.47
+B_R = 1.70
+Ea_U = 0.82 # Ea for uptake
+Ea_R = 0.67
+B_R*(Ea_U-Ea_R)/(B_U*(1-lf)-B_R)
+U_Sharpe = B_U * np.exp((-Ea_U/k) * ((1/T)-(1/Tref)))/(1 + (Ea_U/(Ea_D - Ea_U)) * np.exp(Ea_D/k * (1/T_pk_U - 1/T))) 
+R_Sharpe = B_R * np.exp((-Ea_R/k) * ((1/T)-(1/Tref)))/(1 + (Ea_R/(Ea_D - Ea_R)) * np.exp(Ea_D/k * (1/T_pk_R - 1/T)))
+CUE_Sharpe = 0.22* np.exp((-B_R*(Ea_U-Ea_R)/(B_U*(1-lf)-B_R)/k) * ((1/T)-(1/Tref)))
+
+fig, ax1 = plt.subplots()
+ax2 = ax1.twinx()
+ln1 = ax1.plot(T - 273.15, U_Sharpe, 'darkorange', linewidth=2, label = "Uptake Rate")
+ln2 = ax1.plot(T - 273.15, R_Sharpe, 'darkgreen', linewidth=2, label = "Respiration Rate")
+ln3 = ax2.plot(T - 273.15, CUE_Sharpe, 'r', linewidth=2, label = 'CUE')
+ax1.set_xlabel('Temperature ($^\circ$C)', fontsize = 30)
+ax1.set_ylabel('Uptake & Respiration Rates', fontsize = 30)
+ax2.set_ylabel('CUE', fontsize = 30)
+# plt.title('Modified Sharpe-Schoolfield Temperature Performance Curve')
+lns = ln1+ln2+ln3
+ax1.legend(lns, [i.get_label() for i in lns], loc = 2, fontsize = 25)
+ax1.annotate(s='', xy=(9,35), xytext=(14,56), arrowprops=dict(arrowstyle='<-', lw=2))
+ax1.text(11,62,'$E_{a_{CUE}}$')
+plt.tight_layout()
+plt.savefig('../../pre/Figures/URCUE.png')
+plt.show()

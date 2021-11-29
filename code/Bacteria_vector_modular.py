@@ -1,5 +1,6 @@
 import numpy as np
-from scipy.integrate import odeint
+# from scipy.integrate import odeint
+from scipy.integrate import solve_ivp
 import matplotlib.pylab as plt
 from matplotlib.lines import Line2D
 import sys
@@ -16,11 +17,11 @@ import random
 
 ######## Set up parameters ###########
 
-N = 100 # Number of consumers
-M = 50 # Number of resources
+N = 10 # Number of consumers
+M = 5 # Number of resources
 
 # Temperature params
-T = 273.15 + 25 # Temperature
+T = 273.15 + 27 # Temperature
 Tref = 273.15 + 0 # Reference temperature Kelvin
 Ma = 1 # Mass
 Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
@@ -45,9 +46,12 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
     # Setted Parameters
     k = 0.0000862 # Boltzman constant
     a = 15 # The alpha value for beta distribution in Ea
-    B_R = 1.70 * np.exp((-0.67/k) * ((1/Tref)-(1/273.15)))/(1 + (0.67/(Ea_D - 0.67)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref))) # Using CUE0 = 0.22, mean growth rate = 0.48
-    B_U = (1.70/(1 - lf - 0.22)) * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref)))
-
+    # B_R = 1.70 * np.exp((-0.67/k) * ((1/Tref)-(1/273.15)))/(1 + (0.67/(Ea_D - 0.67)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref))) # Using CUE0 = 0.22, mean growth rate = 0.48
+    # B_U = (1.70/(1 - lf - 0.22)) * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref)))
+    
+    ## Adding variation into CUE0
+    B_R0 = 1.70 * np.exp((-0.67/k) * ((1/Tref)-(1/273.15)))/(1 + (0.67/(Ea_D - 0.67)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref))) # Using CUE0 = 0.22, mean growth rate = 0.48
+    B_U0 = (1.70/(1 - lf - 0.22)) * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref)))
 
     ### Creating empty array for storing data ###
     result_array = np.empty((0,N+M)) # Array to store data in for plotting
@@ -73,6 +77,9 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
         # Ea_R = Ea_U
         Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, N)*4
 
+        B_R = np.random.normal(np.mean(B_R0), 0.1*np.mean(B_R0), N) ## Adding variation into CUE0
+        B_U = np.random.normal(np.mean(B_U0), 0.1*np.mean(B_U0), N) ## Adding variation into CUE0
+
         p = np.repeat(p_value, M)  # Resource input
 
         # Set up model
@@ -80,29 +87,36 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
         l_sum = np.sum(l, axis=1)
         
         # With cost
-        R_cost = R*(1-lf)*np.sum(U/np.sum(U), axis = 1)*150
+        # R_cost = R*(1-lf)*np.sum(U/np.sum(U), axis = 1)*150
 
         # Integration
         t = np.linspace(0,t_fin-1,t_fin) 
         pars = (U, R, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
         # pars = (U, R_cost, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
 
-        pops, infodict = odeint(mod.metabolic_model, y0=x0, t=t, args = pars, full_output=1) # Integrate
-        while np.any(infodict.get('nfe')> 10000):
-            T_pk_U = 273.15 + np.random.normal(35, 5, size = N)
-            T_pk_R = T_pk_U + 3
-            Ea_U = np.random.beta(a, ((a - 1/3) / (0.82/4)) + 2/3 - a, N)*4
-            Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, N)*4
-            U, R, l = par.params(N, M, T, k, Tref, T_pk_U, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf) # Uptake
-            l_sum = np.sum(l, axis=1)
-            pars = (U, R, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
-            # pars = (U, R_cost, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
-            pops, infodict = odeint(mod.metabolic_model, y0=x0, t=t, args = pars, full_output=1)
+        # pops, infodict = odeint(mod.metabolic_model, y0=x0, t=t, args = pars, full_output=1) # Integrate
+        pops = solve_ivp(mod.metabolic_model, t_span= [0,t_fin], y0=x0, t_eval = t, args = pars, method = 'BDF') # Integrate
+        pops.y = np.transpose(np.round(pops.y, 7))
 
-        pops = np.round(pops, 7)
+        # while np.any(infodict.get('nfe')> 10000):
+        #     T_pk_U = 273.15 + np.random.normal(35, 5, size = N)
+        #     T_pk_R = T_pk_U + 3
+        #     Ea_U = np.random.beta(a, ((a - 1/3) / (0.82/4)) + 2/3 - a, N)*4
+        #     Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, N)*4
+
+        #     B_R = np.random.normal(np.mean(B_R0), 0.1*np.mean(B_R0), N) ## Adding variation into CUE0
+        #     B_U = np.random.normal(np.mean(B_U0), 0.1*np.mean(B_U0), N) ## Adding variation into CUE0
+
+        #     U, R, l = par.params(N, M, T, k, Tref, T_pk_U, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf) # Uptake
+        #     l_sum = np.sum(l, axis=1)
+        #     pars = (U, R, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
+        #     # pars = (U, R_cost, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
+        #     pops, infodict = odeint(mod.metabolic_model, y0=x0, t=t, args = pars, full_output=1)
+
+        # pops = np.round(pops, 7)
 
         ### Storing simulation results ###
-        result_array = np.append(result_array, pops, axis=0)
+        result_array = np.append(result_array, pops.y, axis=0)
         U_out_total = np.append(U_out_total, U, axis = 0)
         R_out = np.append(R_out, [R], axis = 0)
 
@@ -123,7 +137,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
 
 
         # Richness
-        rich_series = np.append(rich_series, [len(np.where(pops[t_fin-1,0:N])[0])]) # Get the consumer concentrations from last timestep and find out survivors
+        rich_series = np.append(rich_series, [len(np.where(pops.y[t_fin-1,0:N])[0])]) # Get the consumer concentrations from last timestep and find out survivors
 
 
         # CUE
@@ -137,7 +151,7 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
 
     return result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr
 
-# result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K)
+result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K)
 
 
 

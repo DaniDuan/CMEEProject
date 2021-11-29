@@ -798,17 +798,105 @@ np.mean((1 - overlap)/(N-1), axis = 1)
 
 N = 2
 M = 1
+T = 273.15 + 25 # Temperature
+Tref = 273.15 + 0 # Reference temperature Kelvin
+Ma = 1 # Mass
+Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
+Ea_CUE = 0.3
+lf = 0.4 # Leakage
+p_value = 1 # External input resource concentration
+
+# Assembly
 ass = 1
-T = 273.15 + 25
+t_fin = 10 # Number of time steps
+typ = 1 # Functional response, Type I or II
+K = 5 # Half saturation constant
+
 result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K)
 
-plt.plot(t_plot, result_array[:,N:N+M], 'b-', linewidth=0.7)
-plt.plot(t_plot, result_array[:,0:N], 'g-', linewidth=0.7)
-plt.ylabel('Consumer & Resource concentration')
+t_plot = np.linspace(0,t_fin,t_fin)
+plt.plot(t_plot, result_array[:,N:N+M], 'b-', linewidth=2)
+plt.plot(t_plot, result_array[:,0:N], 'g-', linewidth=2)
+plt.ylabel('Concentration')
 plt.xlabel('Time')
-plt.legend([Line2D([0], [0], color='green', lw=2), Line2D([0], [0], color='blue', lw=2)], ['Consumers', 'Resources'])
+plt.legend([Line2D([0], [0], color='green', lw=2), Line2D([0], [0], color='blue', lw=2)], ['Consumer biomass', 'Resource'])
+plt.savefig('../../pre/2_consumer_25C.png')
+
 # plt.title('Consumer-Resource population dynamics')
 plt.show()
 
 
 rich = temp_rich.get('rich')
+
+
+plt.rcParams["figure.figsize"] = (15,9)
+# plt.rcParams["figure.figsize"] = plt.rcParamsDefault["figure.figsize"]
+plt.rcParams.update({'font.size': 35})
+plt.rc('xtick', labelsize=35) 
+plt.rc('ytick', labelsize=35) 
+# plt.rcParams.update(mpl.rcParamsDefault)
+
+
+
+#############################################################################################
+import time
+start = time.time()
+
+from Bacteria_vector_modular import ass_temp_run
+import matplotlib.pylab as plt
+import numpy as np
+import scipy as sc
+
+########## Setting Parameters ###########
+N = 100 # Number of consumers
+M = 50 # Number of resources
+
+# Temperature params
+Tref = 273.15 + 0 # Reference temperature Kelvin
+Ma = 1 # Mass
+Ea_D = np.repeat(3.5,N) # Deactivation energy
+lf = 0.4 # Leakage
+p_value = 1 # External input resource concentration
+
+# Assembly
+ass = 30 # Assembly times at each temperature
+t_fin = 4000 # Number of time steps for each temperature
+typ = 1 # Functional response, Type I or II
+K = 0.5 # Half saturation constant for Monod equation(Type II)
+T_c = 7 # How many temperatures to cover (how many cycles to run)
+
+rich = np.empty((0, ass))
+
+for i in range(T_c):
+    T = 273.15 + i # Temperature
+    result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K)
+    rich = np.append(rich, [rich_series.flatten()], axis = 0)
+
+print((time.time() - start)/60)
+
+rich_mean = np.nanmean(rich, axis = 1)
+rich_ci =  1.96 * np.nanstd(rich,axis = 1)/(ass**0.5)
+
+T_plot = range(0, T_c, 1)
+
+plt.plot(T_plot, rich_mean, 'b')
+plt.fill_between(T_plot, rich_mean - rich_ci, rich_mean + rich_ci, color = 'b', alpha=0.1)
+plt.xlabel('Temperature ($^\circ$C)')
+plt.ylabel('Richness')
+# plt.text(-5,25,'A',fontsize= 'x-large')
+# plt.savefig('../../pre/selectingEaCUE.png')
+plt. show()
+
+
+from scipy.integrate import solve_ivp
+def exponential_decay(t, y): return -0.5 * y
+sol = solve_ivp(exponential_decay, [0, 10], [2, 4, 8])
+sol.y
+
+
+l_raw = np.array([[np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
+l = [[l_raw[j,i] if j>=i else 0 for j in range(M)] for i in range(M)]
+
+l_raw = np.array([[np.random.normal(lf/3,0.005) if i > M-3 else np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
+l = [[l_raw[j,i] if j>=i and j-i <3 else 0 for j in range(M)] for i in range(M)]
+
