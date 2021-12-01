@@ -5,6 +5,7 @@ from Bacteria_vector_modular import ass_temp_run
 import matplotlib.pylab as plt
 import numpy as np
 import scipy as sc
+from scipy import stats
 
 ########## Setting Parameters ###########
 N = 100 # Number of consumers
@@ -13,12 +14,12 @@ M = 50 # Number of resources
 # Temperature params
 Tref = 273.15 + 0 # Reference temperature Kelvin
 Ma = 1 # Mass
-Ea_D = np.repeat(3.5,N) # Deactivation energy
+Ea_D = 3.5 # Deactivation energy
 lf = 0.4 # Leakage
 p_value = 1 # External input resource concentration
 
 # Assembly
-ass = 30 # Assembly times at each temperature
+ass = 50 # Assembly times at each temperature
 t_fin = 4000 # Number of time steps for each temperature
 typ = 1 # Functional response, Type I or II
 K = 0.5 # Half saturation constant for Monod equation(Type II)
@@ -109,7 +110,7 @@ temp_rich = {'rich':rich, 'eq':eq, 'eq_sur':eq_sur, 'eq_sur_ci': eq_sur_ci, 'dEa
      'ext_overlap':ext_overlap, 'sur_crossf':sur_crossf, 'ext_crossf':ext_crossf}
 np.save('../data/temp_rich.npy', temp_rich) 
 
-temp_rich = np.load('../data/temp_rich.npy',allow_pickle='TRUE').item()
+# temp_rich = np.load('../data/temp_rich.npy',allow_pickle='TRUE').item()
 
 rich_mean = np.nanmean(rich, axis = 1)
 rich_ci =  1.96 * np.nanstd(rich,axis = 1)/(ass**0.5)
@@ -157,15 +158,19 @@ surEa_mean = np.array([np.mean(sur_Ea[i]) for i in range(T_c)])
 surEa_ci = np.array([1.96 * np.std(sur_Ea[i])/(len(sur_Ea[i])**0.5) for i in range(T_c)])
 
 Ea = []
+Ea_e = []
 for i in range(T_c): 
     n = 0
     for j in rich[i]:
         j = int(j)
         Ea.append(sur_Ea[i][n:n+j])
+        Ea_e.append(ext_Ea[i][n:n+j])
         n = n + j
 
 A = list(zip(rich.flatten(),Ea))
+B = list(zip(rich.flatten(),Ea_e))
 A.sort(key = lambda x: x[0])
+B.sort(key = lambda x: x[0])
 
 rich_v = []
 for x in rich.flatten():
@@ -175,24 +180,33 @@ rich_v = np.sort(rich_v)
 
 
 Ea_sorted = []
+Ea_e_sorted = []
 for i in rich_v:
     sorting = np.empty((0))
+    sorting_e = np.empty((0))
     for j in range(len(A)):
         if [x[0] for x in A][j] == i:
             sorting = np.append(sorting, A[j][1])
+            sorting_e = np.append(sorting_e, B[j][1])
     Ea_sorted.append(sorting)
+    Ea_e_sorted.append(sorting_e)
 
     
 meanEa = []
+ciEa = []
+meanEa_e = []
+ciEa_e = []
 for i in range(len(Ea_sorted)):
     meanEa.append(np.mean(Ea_sorted[i]))
-
+    ciEa.append(1.96 * np.std(Ea_sorted[i])/(len(Ea_sorted[i])**0.5))
+    meanEa_e.append(np.mean(Ea_e_sorted[i][np.where(Ea_e_sorted[i]>-500)]))
+    ciEa_e.append(1.96 * np.std(Ea_e_sorted[i][np.where(Ea_e_sorted[i]>-500)])/(len(Ea_e_sorted[i][np.where(Ea_e_sorted[i]>-500)])**0.5))
 
 T_plot = range(0, T_c, 1)
 T_sur = [[np.repeat(T_plot[i], rich[i][j]) for j in range(ass)] for i in range(T_c)]
 
 
-plt.rcParams["figure.figsize"] = (15,9)
+# plt.rcParams["figure.figsize"] = (15,9)
 # # plt.rcParams["figure.figsize"] = plt.rcParamsDefault["figure.figsize"]
 # plt.rcParams.update({'font.size': 25})
 # plt.rc('xtick', labelsize=25) 
@@ -206,23 +220,23 @@ plt.rc('xtick', labelsize=30)
 plt.rc('ytick', labelsize=30) 
 # plt.rcParams.update(mpl.rcParamsDefault)
 
-plt.plot(T_plot, rich_mean, 'b')
-plt.fill_between(T_plot, rich_mean - rich_ci, rich_mean + rich_ci, color = 'b', alpha=0.1)
+plt.plot(T_plot, rich_mean)
+plt.fill_between(T_plot, rich_mean - rich_ci, rich_mean + rich_ci, alpha=0.1,linewidth=2.5)
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('Richness')
-# plt.text(-5,25,'A',fontsize= 'x-large')
-# plt.savefig('../../pre/selectingEaCUE.png')
+plt.text(-5,14,'A',fontsize= 'x-large')
+plt.savefig('../thesis/Figures/selectingEaCUE.png')
 plt. show()
 
 fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
-ln1 = ax1.plot(T_plot, sU_mean,'darkorange', label = "Survivor Uptake Rate")
+ln1 = ax1.plot(T_plot, sU_mean,'darkorange', label = "Survivor Uptake Rate",linewidth=2.5)
 ax1.fill_between(T_plot, sU_mean - sU_ci, sU_mean + sU_ci, color='darkorange', alpha=.1)
-ln3 = ax1.plot(T_plot, eU_mean,'tan', label = "Extinct Uptake Rate", alpha=.7)
+ln3 = ax1.plot(T_plot, eU_mean,'tan', label = "Extinct Uptake Rate", alpha=.7,linewidth=2.5)
 ax1.fill_between(T_plot, eU_mean - eU_ci, eU_mean + eU_ci, color='tan', alpha=.3)
-ln2 = ax2.plot(T_plot, sR_mean, 'g', label = "Survivor Respiration Rate")
+ln2 = ax2.plot(T_plot, sR_mean, 'g', label = "Survivor Respiration Rate",linewidth=2.5)
 ax2.fill_between(T_plot, sR_mean - sR_ci, sR_mean + sR_ci, color='g', alpha=.1)
-ln4 = ax2.plot(T_plot, eR_mean, 'darkseagreen', label = "Extinct Respiration Rate", alpha=.5)
+ln4 = ax2.plot(T_plot, eR_mean, 'darkseagreen', label = "Extinct Respiration Rate", alpha=.5,linewidth=2.5)
 ax2.fill_between(T_plot, eR_mean - eR_ci, eR_mean + eR_ci, color='darkseagreen', alpha=.1)
 ax1.set_xlabel('Temperature ($^\circ$C)')
 ax1.set_ylabel('Uptake Rate (1/Time)')
@@ -230,41 +244,48 @@ ax2.set_ylabel('Repiration Rate (Mass/Volume*Time)')
 lns = ln1+ln2+ln3+ln4
 ax1.legend(lns, [i.get_label() for i in lns], loc = 2)
 # text(-5,400,'B',fontsize= 'x-large')
-# ax1.text(-5,890,'A',fontsize= 'x-large')
-# plt.savefig('../../pre/selectingEaCUE_1.png')
+ax1.text(-5,900,'A',fontsize= 'x-large')
+plt.savefig('../thesis/Figures/selectingEaCUE_1.png')
 plt. show()
 
-plt.plot(T_plot, CUE_mean, 'r', label = "Survivor")
+plt.plot(T_plot, CUE_mean, 'r', label = "Survivor",linewidth=2.5)
 plt.fill_between(T_plot, CUE_mean - CUE_ci, CUE_mean + CUE_ci, color='r', alpha=.1)
-plt.plot(T_plot, CUE_ext_mean, 'dimgrey', label = "Extinct")
+plt.plot(T_plot, CUE_ext_mean, 'dimgrey', label = "Extinct",linewidth=2.5)
 plt.fill_between(T_plot,  CUE_ext_mean - CUE_ext_ci,  CUE_ext_mean + CUE_ext_ci, color='dimgrey', alpha=.1)
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('CUE')
 plt.legend()
-# plt.text(-5,0.62,'B',fontsize= 'x-large')
-# plt.savefig('../../pre/selectingEaCUE_2.png')
+plt.text(-5,0.6,'B',fontsize= 'x-large')
+plt.savefig('../thesis/Figures/selectingEaCUE_2.png')
 plt. show()
 
 
-n = 0
-for i in range(T_c):
-    plt.scatter(ext_Ea[i], np.concatenate(rich_ext[i]), color = 'lightgrey', alpha = 0.3, s = 50)
-    if n == 0: 
-        plt.scatter(sur_Ea[i], np.concatenate(rich_sur[i]), color = 'b', alpha = 0.5, s =50, label = 'Survivors')
-        n = 1
-    else:
-        plt.scatter(sur_Ea[i], np.concatenate(rich_sur[i]), color = 'b', alpha = 0.5, s = 50)
-m, b = np.polyfit(np.delete(meanEa,np.where(np.isnan(meanEa))), np.delete(rich_v,np.where(np.isnan(meanEa))), 1)
-# x = np.arange(0.13, 1.5, 0.01)
+# n = 0
+# for i in range(T_c):
+#     plt.scatter(ext_Ea[i], np.concatenate(rich_ext[i]), color = 'lightgrey', alpha = 0.5, s = 50)
+#     if n == 0: 
+#         plt.scatter(sur_Ea[i], np.concatenate(rich_sur[i]), color = 'b', alpha = 0.5, s =50, label = 'Survivors')
+#         n = 1
+#     else:
+#         plt.scatter(sur_Ea[i], np.concatenate(rich_sur[i]), color = 'b', alpha = 0.5, s = 50)
+# m, b = np.polyfit(np.delete(meanEa,np.where(np.isnan(meanEa))), np.delete(rich_v,np.where(np.isnan(meanEa))), 1)
+# # x = np.arange(0.13, 1.5, 0.01)
+
+plt.scatter(meanEa, rich_v, color = 'b', alpha = 0.7, s = 50, label = 'Survivors')
+plt.errorbar(meanEa, rich_v, xerr=ciEa, fmt=',', color = 'b', alpha = 0.7)
+plt.scatter(meanEa_e, rich_v, color = 'grey', alpha = 0.7, s = 50, label = 'Extinct')
+plt.errorbar(meanEa_e, rich_v, xerr=ciEa_e, fmt=',', color = 'grey', alpha = 0.7)
+
 m, b, r_value, p_value, std_err = sc.stats.linregress(meanEa, rich_v)
 print(r_value**2)
-plt.plot(x, m*x + b, color = 'k',linewidth=3.5)
-plt.text(1.48, 17, '$R^2 = $%s' %np.round(r_value**2, 3), fontsize = 22)
+x = np.arange((np.max(rich_v)-b)/m, (np.min(rich_v)-b)/m, 0.01)
+plt.plot(x, m*x + b, color = 'k',linewidth=3)
+plt.text(0.7, 12.5, '$R^2 = $%s' %np.round(r_value**2, 3), fontsize = 22)
 plt.xlabel('Thermal Sensitivity of CUE')
 plt.ylabel('Richness')
-plt.legend(loc = 3)
-# plt.text(-2,30,'B',fontsize= 'x-large')
-# plt.savefig('../../pre/EaCUE_richness.png')
+plt.legend()
+plt.text(-0.35,20,'B',fontsize= 'x-large')
+plt.savefig('../thesis/Figures/EaCUE_richness.png')
 plt.show()
 
 
@@ -279,9 +300,9 @@ plt.fill_between(T_plot, crossf_ext_mean - crossf_ext_ci, crossf_ext_mean + cros
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('Pair-wise Interactions')
 plt.legend(fontsize = 'x-small', framealpha = 0.4)
-plt.tight_layout()
-# plt.text(-5,0.375,'A',fontsize= 'x-large')
-# plt.savefig('../../pre/Resource_overlap.png')
+# plt.tight_layout()
+plt.text(-6,0.4,'A',fontsize= 'x-large')
+plt.savefig('../thesis/Figures/Resource_overlap.png')
 plt.show()
 
 
@@ -303,9 +324,9 @@ plt.fill_between(T_plot, np.log(extU_var_mean-extU_var_ci), np.log(extU_var_mean
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('Variance of Uptake (log)')
 plt.legend(loc = 2,fontsize = 'x-small')
-plt.tight_layout()
-# plt.text(-5,500,'B',fontsize= 'x-large')
-# plt.savefig('../../pre/Figures/VarU.png')
+# plt.tight_layout()
+plt.text(-6,7.2,'B',fontsize= 'x-large')
+plt.savefig('../thesis/Figures/VarU.png')
 plt.show()
 
 plt.scatter(Sr_mean, rich_mean, s=20, color = 'k', alpha = 0.7)
@@ -326,13 +347,12 @@ plt.fill_between(T_plot, eq_mean - eq_ci, eq_mean + eq_ci, color='r', alpha=.1)
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('|Survivor $S_i^* - \overline{S^*}$|')
 # plt.legend()
-# plt.savefig('../../pre/eq_st.png')
+plt.savefig('../thesis/Figures/eq_st.png')
 plt.show()
 
 dEa_mean = np.nanmean(dEa_sur, axis = 1)
 dEa_ci = 1.96 * np.nanstd(dEa_sur,axis = 1)/(ass**0.5)
 
-import scipy as sc
 m, b, r_value, p_value, std_err = sc.stats.linregress(dEa_mean, rich_mean)
 print(r_value**2)
 x = np.arange(np.min(dEa_mean), np.max(dEa_mean), 0.001)
@@ -377,8 +397,8 @@ plt.errorbar(surEa_mean, Sr_mean, xerr=surEa_ci, fmt=',', color = 'k', alpha = 0
 plt.errorbar(surEa_mean, Sr_mean, yerr=Sr_ci, fmt=',', color = 'k', alpha = 0.3)
 plt.xlabel('Average survivor $E_{a_{CUE}}$')
 plt.ylabel('Average survivor $S^*$')
-# plt.text(0.07,0.7,'A',fontsize= 'x-large')
-# plt.savefig('../../pre/Figures/Eadiff_fitdiff.png')
+plt.text(-0.1,0.57,'A',fontsize= 'x-large')
+plt.savefig('../thesis/Figures/Eadiff_fitdiff.png')
 plt.show()
 
 ########################################################################################################
@@ -706,7 +726,7 @@ M = 50 # Number of resources
 T = 273.15 + 0 # Temperature
 Tref = 273.15 + 0 # Reference temperature Kelvin, 10 degrees C !!!
 Ma = 1 # Mass
-Ea_D = np.repeat(3.5,N) # Deactivation energy
+Ea_D = 3.5 # Deactivation energy
 Ea_CUE = 0.3
 lf = 0.4 # Leakage
 p_value = 1 # External input resource concentration
@@ -727,12 +747,13 @@ rich_mean_1 = np.mean(rich_1, axis = 0)
 rich_ci_1 = 1.96 * np.std(rich_1,axis = 0)/(ass**0.5)
 t_plot = np.linspace(0,t_fin,t_fin)
 
-plt.plot(t_plot, rich_mean_1)
-plt.fill_between(t_plot, rich_mean_1 - rich_ci_1, rich_mean_1 + rich_ci_1, color = 'b', alpha=.2)
+plt.plot(t_plot[0:2000], rich_mean_1[0:2000])
+plt.fill_between(t_plot[0:2000], rich_mean_1[0:2000] - rich_ci_1[0:2000], rich_mean_1[0:2000] + rich_ci_1[0:2000], alpha=.2)
 plt.ylabel('Richness')
 plt.xlabel('Time')
-# plt.text(-700,110,'B',fontsize= 'x-large')
-plt.savefig('../../pre/Figures/rich_decay.png')
+# plt.xlim([0,2000])
+plt.text(-400,110,'B',fontsize= 'x-large')
+plt.savefig('../thesis/Figures/rich_decay.png')
 plt.show()
 
 
@@ -1096,3 +1117,77 @@ ax1.text(11,62,'$E_{a_{CUE}}$')
 plt.tight_layout()
 plt.savefig('../../pre/Figures/URCUE.png')
 plt.show()
+
+
+###############################################################################################################################
+import numpy as np
+
+M = 5
+lf = 0.4
+
+l_raw = np.array([[np.random.normal(lf/3,0.005) if i >= 3 and i > M-3 else np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
+l = [[l_raw[j,i] if j>=i and j-i <3 else 0 for j in range(M)] for i in range(M)]
+
+im = plt.imshow(l, cmap = 'binary')
+ax = plt.gca()
+ax.set_xticks(np.arange(-.5,5,1), minor = True)
+ax.set_yticks(np.arange(-.5,5,1), minor = True)
+plt.xticks([])
+plt.yticks([])
+ax.grid(which = 'minor', color = 'k', linestyle='-', linewidth=1)
+plt.title( "" )
+plt.grid()
+plt.show()
+
+import parameters as par
+import size_temp_funcs as st
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+N = 5 # Number of consumers
+M = 5 # Number of resources
+
+# Temperature params
+Tref = 273.15 # Reference temperature Kelvin, 0 degrees C
+pk_U =  273.15 + np.random.normal(35, 5, size = N)
+Ma = 1 # Mass
+Ea_D = 3.5 # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
+k = 0.0000862 # Boltzman constant
+T_pk = Tref + pk_U # Peak above Tref, Kelvin
+T = 273.15 + 25 # Temperature
+Ea_U = np.random.beta(4, ((4 - 1/3) / 0.82) + 2/3 - 4, N) # Ea for uptake
+B_U0 = (1.70/(1 - lf - 0.22)) * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref)))
+B_U = np.random.normal(B_U0, 0.1*B_U0, N) # Adding variation into B0
+
+U_sum = st.temp_growth(k, T, Tref, T_pk, N, B_U, Ma, Ea_U, Ea_D)
+diri = np.transpose(np.random.dirichlet(np.ones(M),N))
+U = np.transpose(diri*U_sum)
+print(U_sum)
+print(U)
+
+Xlabel = ''
+Ylabel = ''
+fig = plt.figure()
+ax = fig.add_subplot(111)
+im = plt.imshow(U, cmap = 'binary')
+ax = plt.gca()
+ax.set_xticks(np.arange(-.5,5,1), minor = True)
+ax.set_yticks(np.arange(-.5,5,1), minor = True)
+plt.xticks([])
+plt.yticks([])
+ax.grid(which = 'minor', color = 'k', linestyle='-', linewidth=1)
+plt.title( "" )
+plt.show()
+
+plt.rcParams["figure.figsize"] = (15,9)
+
+T = 273.15 + np.linspace(0,50,51) # Temperatures
+for i in range(N):
+    U_Sharpe = B_U[i] * np.exp((-Ea_U[i]/k) * ((1/T)-(1/Tref)))/(1 + (Ea_U[i]/(Ea_D - Ea_U[i])) * np.exp(Ea_D/k * (1/pk_U[i] - 1/T))) 
+    plt.plot(T - 273.15, U_Sharpe, 'darkgreen', linewidth=4)
+    plt.axvline(25, linewidth = 2.5, color = 'darkblue')
+    plt.yticks([])
+    plt.ylim(0,165)
+    plt.xticks([])
+    plt.show()

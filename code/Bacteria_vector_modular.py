@@ -1,37 +1,32 @@
 import numpy as np
-# from scipy.integrate import odeint
 from scipy.integrate import solve_ivp
-import matplotlib.pylab as plt
-from matplotlib.lines import Line2D
-import sys
-import importlib
-import math
-from sklearn.utils import shuffle
-from random import randint 
+# from scipy.integrate import odeint
+# import matplotlib.pylab as plt
+# from matplotlib.lines import Line2D
 import size_temp_funcs as st
 import parameters as par
 import model_func as mod
-import random
+
 
 ######### Main Code ###########
 
 ######## Set up parameters ###########
 
-N = 10 # Number of consumers
-M = 5 # Number of resources
+N = 100 # Number of consumers
+M = 50 # Number of resources
 
 # Temperature params
-T = 273.15 + 27 # Temperature
+T = 273.15 + 0 # Temperature
 Tref = 273.15 + 0 # Reference temperature Kelvin
 Ma = 1 # Mass
-Ea_D = np.repeat(3.5,N) # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
+Ea_D = 3.5 # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
 Ea_CUE = 0.3
 lf = 0.4 # Leakage
 p_value = 1 # External input resource concentration
 
 # Assembly
 ass = 30 # Assembly number, i.e. how many times the system can assemble
-t_fin = 4000 # Number of time steps
+t_fin = 2000 # Number of time steps
 typ = 1 # Functional response, Type I or II
 K = 5 # Half saturation constant
 # strc = 1
@@ -46,10 +41,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
     # Setted Parameters
     k = 0.0000862 # Boltzman constant
     a = 15 # The alpha value for beta distribution in Ea
-    # B_R = 1.70 * np.exp((-0.67/k) * ((1/Tref)-(1/273.15)))/(1 + (0.67/(Ea_D - 0.67)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref))) # Using CUE0 = 0.22, mean growth rate = 0.48
-    # B_U = (1.70/(1 - lf - 0.22)) * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref)))
-    
-    ## Adding variation into CUE0
     B_R0 = 1.70 * np.exp((-0.67/k) * ((1/Tref)-(1/273.15)))/(1 + (0.67/(Ea_D - 0.67)) * np.exp(Ea_D/k * (1/311.15 - 1/Tref))) # Using CUE0 = 0.22, mean growth rate = 0.48
     B_U0 = (1.70/(1 - lf - 0.22)) * np.exp((-0.82/k) * ((1/Tref)-(1/273.15)))/(1 + (0.82/(Ea_D - 0.82)) * np.exp(Ea_D/k * (1/308.15 - 1/Tref)))
 
@@ -71,19 +62,18 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
         x0 = np.concatenate((np.full([N], 0.1), np.full([M], 1))) # Starting concentration for resources and consumers
 
         # Set up Ea (activation energy) and B0 (normalisation constant) based on Tom Smith's observations
+        B_U = np.random.normal(B_U0, 0.1*B_U0, N) # Adding variation into B0
+        B_R = np.random.normal(B_R0, 0.1*B_R0, N)
         T_pk_U = 273.15 + np.random.normal(35, 5, size = N)
         T_pk_R = T_pk_U + 3
         Ea_U = np.random.beta(a, ((a - 1/3) / (0.82/4)) + 2/3 - a, N)*4
         # Ea_R = Ea_U
         Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, N)*4
 
-        B_R = np.random.normal(np.mean(B_R0), 0.1*np.mean(B_R0), N) ## Adding variation into CUE0
-        B_U = np.random.normal(np.mean(B_U0), 0.1*np.mean(B_U0), N) ## Adding variation into CUE0
-
         p = np.repeat(p_value, M)  # Resource input
 
         # Set up model
-        U, R, l = par.params(N, M, T, k, Tref, T_pk_U, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf) # Uptake
+        U, R, l = par.params(N, M, T, k, Tref, T_pk_U, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, np.repeat(Ea_D,N), lf) # Uptake
         l_sum = np.sum(l, axis=1)
         
         # With cost
@@ -98,23 +88,6 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
         pops = solve_ivp(mod.metabolic_model, t_span= [0,t_fin], y0=x0, t_eval = t, args = pars, method = 'BDF') # Integrate
         pops.y = np.transpose(np.round(pops.y, 7))
 
-        # while np.any(infodict.get('nfe')> 10000):
-        #     T_pk_U = 273.15 + np.random.normal(35, 5, size = N)
-        #     T_pk_R = T_pk_U + 3
-        #     Ea_U = np.random.beta(a, ((a - 1/3) / (0.82/4)) + 2/3 - a, N)*4
-        #     Ea_R = np.random.beta(a, ((a - 1/3) / (0.67/4)) + 2/3 - a, N)*4
-
-        #     B_R = np.random.normal(np.mean(B_R0), 0.1*np.mean(B_R0), N) ## Adding variation into CUE0
-        #     B_U = np.random.normal(np.mean(B_U0), 0.1*np.mean(B_U0), N) ## Adding variation into CUE0
-
-        #     U, R, l = par.params(N, M, T, k, Tref, T_pk_U, T_pk_R, B_U, B_R,Ma, Ea_U, Ea_R, Ea_D, lf) # Uptake
-        #     l_sum = np.sum(l, axis=1)
-        #     pars = (U, R, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
-        #     # pars = (U, R_cost, l, p, l_sum, N, M, typ, K) # Parameters to pass onto model
-        #     pops, infodict = odeint(mod.metabolic_model, y0=x0, t=t, args = pars, full_output=1)
-
-        # pops = np.round(pops, 7)
-
         ### Storing simulation results ###
         result_array = np.append(result_array, pops.y, axis=0)
         U_out_total = np.append(U_out_total, U, axis = 0)
@@ -128,17 +101,13 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
         comp = np.mean(jaccard, axis = 0)
         overlap = np.append(overlap, [comp], axis = 0)
 
-
         # Cross-feeding
         leak = U@l
         cf = np.array([[np.sum(np.minimum(leak[i], U[j]))/np.sum(np.maximum(leak[i], U[j])) for j in range(N)] for i in range(N)])
-        # np.fill_diagonal(cf, np.nan)
         crossf = np.append(crossf, [np.nanmean(cf, axis = 1)], axis = 0)
-
 
         # Richness
         rich_series = np.append(rich_series, [len(np.where(pops.y[t_fin-1,0:N])[0])]) # Get the consumer concentrations from last timestep and find out survivors
-
 
         # CUE
         CUE = (U @ (1 - l_sum) - R)/(np.sum(U, axis = 1))
