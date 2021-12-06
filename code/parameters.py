@@ -31,7 +31,7 @@ def params(N, M, T, k, Tref, T_pk_U, T_pk_R, B_U, B_R, Ma, Ea_U, Ea_R, Ea_D, lf)
     # np.round(l,3) 
 
     # Allowing l to vary among metabolites
-    l = np.stack([np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(3,100),1)*0.4).flatten(), np.zeros(M-3-i))) if i <= M-3 else np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(M-i,100),1)*0.4).flatten())) for i in range(M)])
+    l = np.stack([np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(3,100),1)*lf).flatten(), np.zeros(M-3-i))) if i <= M-3 else np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(M-i,100),1)*lf).flatten())) for i in range(M)])
 
     return U, R, l
 
