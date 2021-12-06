@@ -103,12 +103,12 @@ for i in range(T_c):
 print((time.time() - start)/60)
 
 
-temp_rich = {'rich':rich, 'eq':eq, 'eq_sur':eq_sur, 'eq_sur_ci': eq_sur_ci, 'dEa': dEa, 'dEa_sur': dEa_sur, 'dEa_sur_ci': dEa_sur_ci, \
-     'sU': sU, 'sR': sR, 'eU': eU, 'eR':eR, 'U_var':U_var, 'extU_var':extU_var, 'sur_var':sur_var, 'sur_var_ci':sur_var_ci,\
-     'ext_var': ext_var, 'ext_var_ci':ext_var_ci, 'all_Ea': all_Ea, 'all_Ea_ci': all_Ea_ci, 'sur_CUE':sur_CUE, \
-     'sur_Ea':sur_Ea, 'ext_CUE':ext_CUE, 'ext_Ea':ext_Ea, 'sur_Sr': sur_Sr, 'all_Sr':all_Sr, 'sur_overlap':sur_overlap, \
-     'ext_overlap':ext_overlap, 'sur_crossf':sur_crossf, 'ext_crossf':ext_crossf}
-np.save('../data/temp_rich.npy', temp_rich) 
+# temp_rich = {'rich':rich, 'eq':eq, 'eq_sur':eq_sur, 'eq_sur_ci': eq_sur_ci, 'dEa': dEa, 'dEa_sur': dEa_sur, 'dEa_sur_ci': dEa_sur_ci, \
+#      'sU': sU, 'sR': sR, 'eU': eU, 'eR':eR, 'U_var':U_var, 'extU_var':extU_var, 'sur_var':sur_var, 'sur_var_ci':sur_var_ci,\
+#      'ext_var': ext_var, 'ext_var_ci':ext_var_ci, 'all_Ea': all_Ea, 'all_Ea_ci': all_Ea_ci, 'sur_CUE':sur_CUE, \
+#      'sur_Ea':sur_Ea, 'ext_CUE':ext_CUE, 'ext_Ea':ext_Ea, 'sur_Sr': sur_Sr, 'all_Sr':all_Sr, 'sur_overlap':sur_overlap, \
+#      'ext_overlap':ext_overlap, 'sur_crossf':sur_crossf, 'ext_crossf':ext_crossf}
+# np.save('../data/temp_rich.npy', temp_rich) 
 
 # temp_rich = np.load('../data/temp_rich.npy',allow_pickle='TRUE').item()
 
@@ -225,7 +225,7 @@ plt.fill_between(T_plot, rich_mean - rich_ci, rich_mean + rich_ci, alpha=0.1,lin
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('Richness')
 plt.text(-5,14,'A',fontsize= 'x-large')
-plt.savefig('../thesis/Figures/selectingEaCUE.png')
+# plt.savefig('../thesis/Figures/selectingEaCUE.png')
 plt. show()
 
 fig, ax1 = plt.subplots()
@@ -245,7 +245,7 @@ lns = ln1+ln2+ln3+ln4
 ax1.legend(lns, [i.get_label() for i in lns], loc = 2)
 # text(-5,400,'B',fontsize= 'x-large')
 ax1.text(-5,900,'A',fontsize= 'x-large')
-plt.savefig('../thesis/Figures/selectingEaCUE_1.png')
+# plt.savefig('../thesis/Figures/selectingEaCUE_1.png')
 plt. show()
 
 plt.plot(T_plot, CUE_mean, 'r', label = "Survivor",linewidth=2.5)
@@ -256,7 +256,7 @@ plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('CUE')
 plt.legend()
 plt.text(-5,0.6,'B',fontsize= 'x-large')
-plt.savefig('../thesis/Figures/selectingEaCUE_2.png')
+# plt.savefig('../thesis/Figures/selectingEaCUE_2.png')
 plt. show()
 
 
@@ -285,7 +285,7 @@ plt.xlabel('Thermal Sensitivity of CUE')
 plt.ylabel('Richness')
 plt.legend()
 plt.text(-0.35,20,'B',fontsize= 'x-large')
-plt.savefig('../thesis/Figures/EaCUE_richness.png')
+# plt.savefig('../thesis/Figures/EaCUE_richness.png')
 plt.show()
 
 
@@ -302,7 +302,7 @@ plt.ylabel('Pair-wise Interactions')
 plt.legend(fontsize = 'x-small', framealpha = 0.4)
 # plt.tight_layout()
 plt.text(-6,0.4,'A',fontsize= 'x-large')
-plt.savefig('../thesis/Figures/Resource_overlap.png')
+# plt.savefig('../thesis/Figures/Resource_overlap.png')
 plt.show()
 
 
@@ -326,7 +326,7 @@ plt.ylabel('Variance of Uptake (log)')
 plt.legend(loc = 2,fontsize = 'x-small')
 # plt.tight_layout()
 plt.text(-6,7.2,'B',fontsize= 'x-large')
-plt.savefig('../thesis/Figures/VarU.png')
+# plt.savefig('../thesis/Figures/VarU.png')
 plt.show()
 
 plt.scatter(Sr_mean, rich_mean, s=20, color = 'k', alpha = 0.7)
@@ -347,7 +347,7 @@ plt.fill_between(T_plot, eq_mean - eq_ci, eq_mean + eq_ci, color='r', alpha=.1)
 plt.xlabel('Temperature ($^\circ$C)')
 plt.ylabel('|Survivor $S_i^* - \overline{S^*}$|')
 # plt.legend()
-plt.savefig('../thesis/Figures/eq_st.png')
+# plt.savefig('../thesis/Figures/eq_st.png')
 plt.show()
 
 dEa_mean = np.nanmean(dEa_sur, axis = 1)
@@ -398,7 +398,7 @@ plt.errorbar(surEa_mean, Sr_mean, yerr=Sr_ci, fmt=',', color = 'k', alpha = 0.3)
 plt.xlabel('Average survivor $E_{a_{CUE}}$')
 plt.ylabel('Average survivor $S^*$')
 plt.text(-0.1,0.57,'A',fontsize= 'x-large')
-plt.savefig('../thesis/Figures/Eadiff_fitdiff.png')
+# plt.savefig('../thesis/Figures/Eadiff_fitdiff.png')
 plt.show()
 
 ########################################################################################################
@@ -1125,8 +1125,10 @@ import numpy as np
 M = 5
 lf = 0.4
 
-l_raw = np.array([[np.random.normal(lf/3,0.005) if i >= 3 and i > M-3 else np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
-l = [[l_raw[j,i] if j>=i and j-i <3 else 0 for j in range(M)] for i in range(M)]
+# l_raw = np.array([[np.random.normal(lf/3,0.005) if i >= 3 and i > M-3 else np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
+# l = [[l_raw[j,i] if j>=i and j-i <3 else 0 for j in range(M)] for i in range(M)]
+l = np.stack([np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(3,100),1)*0.4).flatten(), np.zeros(M-3-i))) if i <= M-3 else np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(M-i,100),1)*0.4).flatten())) for i in range(M)])
+
 
 im = plt.imshow(l, cmap = 'binary')
 ax = plt.gca()

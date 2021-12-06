@@ -16,7 +16,7 @@ N = 100 # Number of consumers
 M = 50 # Number of resources
 
 # Temperature params
-T = 273.15 + 0 # Temperature
+T = 273.15 + 28 # Temperature
 Tref = 273.15 + 0 # Reference temperature Kelvin
 Ma = 1 # Mass
 Ea_D = 3.5 # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance

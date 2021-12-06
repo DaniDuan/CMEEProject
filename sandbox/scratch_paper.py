@@ -1,3 +1,4 @@
+from functools import lru_cache
 import numpy as np
 import matplotlib.pylab as plt
 
@@ -900,3 +901,13 @@ l = [[l_raw[j,i] if j>=i else 0 for j in range(M)] for i in range(M)]
 l_raw = np.array([[np.random.normal(lf/3,0.005) if i > M-3 else np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
 l = [[l_raw[j,i] if j>=i and j-i <3 else 0 for j in range(M)] for i in range(M)]
 
+l_raw = np.array([[np.random.normal(lf/3,0.005) if i > M-3 else np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
+l_raw = np.random.dirichlet(np.full(3,1),1)*0.4
+np.random.dirichlet(np.full(1,1),1)*0.4
+l = [[1 if j>=i and j-i <3 else 0 for j in range(M)] for i in range(M)]
+np.round([[l_raw[i,j] for i in range(M)] for j in range(3)],3)
+
+[np.concatenate((np.zeros(i),l_raw[i], np.zeros(M-3-i))) if i <= M-3 else np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(M-i,1),1)*0.4).flatten())) for i in range(M)]
+
+l = np.stack([np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(3,100),1)*0.4).flatten(), np.zeros(M-3-i))) if i <= M-3 else np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(M-i,100),1)*0.4).flatten())) for i in range(M)])
+np.round(l,3)
