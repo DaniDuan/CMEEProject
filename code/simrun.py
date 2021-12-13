@@ -1124,11 +1124,10 @@ import numpy as np
 
 M = 5
 lf = 0.4
-
+alpha = 100
 # l_raw = np.array([[np.random.normal(lf/3,0.005) if i >= 3 and i > M-3 else np.random.normal(1/(i),0.005)* lf for i in range(M,0,-1)] for i in range(1,M+1)])
 # l = [[l_raw[j,i] if j>=i and j-i <3 else 0 for j in range(M)] for i in range(M)]
-l = np.stack([np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(3,100),1)*0.4).flatten(), np.zeros(M-3-i))) if i <= M-3 else np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(M-i,100),1)*0.4).flatten())) for i in range(M)])
-
+l = np.stack([np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(3,alpha),1)*lf).flatten(), np.zeros(M-3-i))) if i <= M-3 else np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(M-i,alpha),1)*lf).flatten())) for i in range(M)])
 
 im = plt.imshow(l, cmap = 'binary')
 ax = plt.gca()
@@ -1140,6 +1139,8 @@ ax.grid(which = 'minor', color = 'k', linestyle='-', linewidth=1)
 plt.title( "" )
 plt.grid()
 plt.show()
+
+np.round(l,3)
 
 import parameters as par
 import size_temp_funcs as st
@@ -1193,3 +1194,12 @@ for i in range(N):
     plt.ylim(0,165)
     plt.xticks([])
     plt.show()
+
+
+
+
+plt.hist(Ea_CUE_out.flatten()[(Ea_CUE_out.flatten()>-10) & (Ea_CUE_out.flatten()<10)],100)
+plt.xlabel("$E_{a_\u03B5}$")
+plt.ylabel("Density")
+plt.savefig('../thesis/Figures/d_EaCUE.png')
+plt.show()

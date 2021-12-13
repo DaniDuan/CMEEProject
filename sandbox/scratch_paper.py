@@ -911,3 +911,31 @@ np.round([[l_raw[i,j] for i in range(M)] for j in range(3)],3)
 
 l = np.stack([np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(3,100),1)*0.4).flatten(), np.zeros(M-3-i))) if i <= M-3 else np.concatenate((np.zeros(i),(np.random.dirichlet(np.full(M-i,100),1)*0.4).flatten())) for i in range(M)])
 np.round(l,3)
+
+
+e_v = np.arange(0.22, 0.42, 0.05)
+Ea = np.arange(0.2, 2.1, 0.1)
+T = 273.15 + 10
+T_test = 1/k * (1/T - 1/273.15)
+
+for i in e_v:
+    y =  np.log(1-(i/(1-lf))) + ((1-lf)/(1-lf-i) - 1)*Ea* (T_test)
+    plt.plot(Ea, y, label = np.round(i,2))
+plt.legend()
+plt.xlabel('Ea')
+plt.ylabel('lnS*')
+plt.show()
+
+
+##################### Uniform distribution #######################
+N = 100
+lf = 0.4
+
+B_U = np.random.uniform(3, 6, N) # Adding variation into B0
+B_R = np.random.uniform(1, 2, N)
+Ea_U = np.random.uniform(0.25, 1.6, N)
+Ea_R = np.random.uniform(0.2, 1.4, N)
+
+Ea_CUE = B_R*(Ea_U - Ea_R)/(B_U*(1 - lf) - B_R)
+plt.hist(Ea_CUE[(Ea_CUE>-10) & (Ea_CUE<10)],100)
+plt.show()

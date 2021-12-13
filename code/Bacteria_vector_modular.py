@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 # from scipy.integrate import odeint
-# import matplotlib.pylab as plt
+import matplotlib.pylab as plt
 # from matplotlib.lines import Line2D
 import size_temp_funcs as st
 import parameters as par
@@ -16,7 +16,7 @@ N = 100 # Number of consumers
 M = 50 # Number of resources
 
 # Temperature params
-T = 273.15 + 28 # Temperature
+T = 273.15 + 0 # Temperature
 Tref = 273.15 + 0 # Reference temperature Kelvin
 Ma = 1 # Mass
 Ea_D = 3.5 # Deactivation energy - only used if use Sharpe-Schoolfield temp-dependance
@@ -122,7 +122,8 @@ def ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K):
 
 result_array, rich_series, l, U_out_total, R_out, CUE_out, Ea_CUE_out, overlap, crossf, Sr = ass_temp_run(t_fin, N, M, T, Tref, Ma, ass, Ea_D, lf, p_value, typ, K)
 
-
+plt.hist(Ea_CUE_out.flatten()[(Ea_CUE_out.flatten()>-10) & (Ea_CUE_out.flatten()<10)],100)
+plt.show()
 
 # rich = np.array([len(np.where(result_array[i,0:N])[0]) for i in range(len(result_array))]).reshape(ass,t_fin)
 # rich_mean = np.mean(rich, axis = 0)
